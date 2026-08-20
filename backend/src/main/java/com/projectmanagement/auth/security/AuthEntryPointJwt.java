@@ -32,10 +32,13 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
+        String authError = (String) request.getAttribute("authError");
+        String message = (authError != null) ? authError : "Full authentication is required to access this resource";
+
         ErrorResponse body = new ErrorResponse(
                 HttpServletResponse.SC_UNAUTHORIZED,
                 "Unauthorized",
-                "Full authentication is required to access this resource"
+                message
         );
 
         objectMapper.writeValue(response.getOutputStream(), body);

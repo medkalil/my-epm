@@ -50,17 +50,25 @@ public class JwtUtils {
     }
 
     public boolean validateJwtToken(String authToken) {
+        return validateJwtToken(authToken, null);
+    }
+
+    public boolean validateJwtToken(String authToken, HttpServletRequest request) {
         try {
             Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(authToken);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             logger.error("Invalid JWT signature / token: {}", e.getMessage());
+            if (request != null) request.setAttribute("authError", "Invalid JWT signature or token format");
         } catch (ExpiredJwtException e) {
             logger.error("JWT token is expired: {}", e.getMessage());
+            if (request != null) request.setAttribute("authError", "JWT token is expired");
         } catch (UnsupportedJwtException e) {
             logger.error("JWT token is unsupported: {}", e.getMessage());
+            if (request != null) request.setAttribute("authError", "JWT token is unsupported");
         } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty: {}", e.getMessage());
+            if (request != null) request.setAttribute("authError", "JWT claims string is empty");
         }
 
         return false;
