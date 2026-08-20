@@ -56,8 +56,7 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/auth/**").permitAll()
-                                // .requestMatchers("/orders/**").authenticated() // Protect order endpoints
+                        auth.requestMatchers("/api/v1/auth/**").permitAll()
                                 // .requestMatchers("/users/**").authenticated() // Protect user endpoints
                                 .anyRequest().authenticated()
                 );
