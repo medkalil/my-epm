@@ -1,6 +1,6 @@
 package com.projectmanagement.auth.entity;
 
-import com.projectmanagement.auth.entity.User;
+import com.projectmanagement.user.entity.User;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -8,7 +8,7 @@ import java.time.Instant;
 @Entity
 public class RefreshToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @OneToOne

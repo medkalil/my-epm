@@ -1,6 +1,6 @@
 package com.projectmanagement.auth.repository;
 
-import com.projectmanagement.auth.entity.User;
+import com.projectmanagement.user.entity.User;
 import com.projectmanagement.auth.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

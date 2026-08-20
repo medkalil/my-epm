@@ -1,7 +1,7 @@
-package com.projectmanagement.auth.service;
+package com.projectmanagement.user.service;
 
-import com.projectmanagement.auth.dto.request.CreateUserRequest;
-import com.projectmanagement.auth.dto.response.UserResponse;
+import com.projectmanagement.user.dto.request.CreateUserRequest;
+import com.projectmanagement.user.dto.response.UserResponse;
 import java.util.List;
 
 public interface UserService {

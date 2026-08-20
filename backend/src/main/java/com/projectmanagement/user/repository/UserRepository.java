@@ -1,6 +1,6 @@
-package com.projectmanagement.auth.repository;
+package com.projectmanagement.user.repository;
 
-import com.projectmanagement.auth.entity.User;
+import com.projectmanagement.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

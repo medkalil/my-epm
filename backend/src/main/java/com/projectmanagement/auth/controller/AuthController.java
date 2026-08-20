@@ -6,11 +6,11 @@ import com.projectmanagement.auth.dto.request.RegisterRequest;
 import com.projectmanagement.auth.dto.request.TokenRefreshRequest;
 import com.projectmanagement.auth.dto.response.TokenRefreshResponse;
 import com.projectmanagement.auth.exception.TokenRefreshException;
-import com.projectmanagement.auth.entity.User;
+import com.projectmanagement.user.entity.User;
 import com.projectmanagement.auth.entity.RefreshToken;
-import com.projectmanagement.auth.repository.UserRepository;
+import com.projectmanagement.user.repository.UserRepository;
 import com.projectmanagement.auth.security.JwtUtils;
-import com.projectmanagement.auth.mapper.UserMapper;
+import com.projectmanagement.user.mapper.UserMapper;
 import com.projectmanagement.auth.service.RefreshTokenService;
 
 import jakarta.validation.Valid;
@@ -24,7 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;

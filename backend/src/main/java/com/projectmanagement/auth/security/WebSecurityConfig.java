@@ -1,8 +1,5 @@
 package com.projectmanagement.auth.security;
 
-import com.projectmanagement.auth.security.AuthEntryPointJwt;
-import com.projectmanagement.auth.security.AuthTokenFilter;
-import com.projectmanagement.auth.security.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

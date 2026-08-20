@@ -1,9 +1,9 @@
 package com.projectmanagement.auth.service;
 
 import com.projectmanagement.auth.exception.TokenRefreshException;
-import com.projectmanagement.auth.entity.User;
+import com.projectmanagement.user.entity.User;
 import com.projectmanagement.auth.entity.RefreshToken;
-import com.projectmanagement.auth.repository.UserRepository;
+import com.projectmanagement.user.repository.UserRepository;
 import com.projectmanagement.auth.repository.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Service
 public class RefreshTokenService {
-    @Value("${demo.app.jwtRefreshExpirationMs}")
+    @Value("${epm.app.jwtRefreshExpirationMs}")
     private Long refreshTokenDurationMs;
 
     private final RefreshTokenRepository refreshTokenRepository;

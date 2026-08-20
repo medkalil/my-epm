@@ -1,12 +1,12 @@
-package com.projectmanagement.auth.service.impl;
+package com.projectmanagement.user.service;
 
-import com.projectmanagement.auth.service.UserService;
-import com.projectmanagement.auth.entity.User;
-import com.projectmanagement.auth.dto.request.CreateUserRequest;
-import com.projectmanagement.auth.dto.response.UserResponse;
-import com.projectmanagement.auth.exception.UserNotFoundException;
-import com.projectmanagement.auth.mapper.UserMapper;
-import com.projectmanagement.auth.repository.UserRepository;
+import com.projectmanagement.user.service.UserService;
+import com.projectmanagement.user.entity.User;
+import com.projectmanagement.user.dto.request.CreateUserRequest;
+import com.projectmanagement.user.dto.response.UserResponse;
+import com.projectmanagement.user.exception.UserNotFoundException;
+import com.projectmanagement.user.mapper.UserMapper;
+import com.projectmanagement.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

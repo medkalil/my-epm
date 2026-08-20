@@ -1,4 +1,4 @@
-package com.projectmanagement.auth.dto.request;
+package com.projectmanagement.user.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

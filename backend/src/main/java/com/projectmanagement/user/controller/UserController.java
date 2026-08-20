@@ -1,8 +1,8 @@
-package com.projectmanagement.auth.controller;
+package com.projectmanagement.user.controller;
 
-import com.projectmanagement.auth.dto.request.CreateUserRequest;
-import com.projectmanagement.auth.dto.response.UserResponse;
-import com.projectmanagement.auth.service.UserService;
+import com.projectmanagement.user.dto.request.CreateUserRequest;
+import com.projectmanagement.user.dto.response.UserResponse;
+import com.projectmanagement.user.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
     private final UserService userService;

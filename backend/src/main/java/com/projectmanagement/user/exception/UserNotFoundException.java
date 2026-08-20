@@ -1,4 +1,4 @@
-package com.projectmanagement.auth.exception;
+package com.projectmanagement.user.exception;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String message) {

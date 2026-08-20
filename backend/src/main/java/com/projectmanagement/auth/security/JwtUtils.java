@@ -1,6 +1,6 @@
 package com.projectmanagement.auth.security;
 
-import com.projectmanagement.auth.entity.User;
+import com.projectmanagement.user.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-
+import org.springframework.util.StringUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Date;
 
@@ -17,10 +18,10 @@ import java.util.Date;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${demo.app.jwtSecret}")
+    @Value("${epm.app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${demo.app.jwtExpirationMs}")
+    @Value("${epm.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
     public String generateJwtToken(Authentication authentication) {
@@ -31,9 +32,6 @@ public class JwtUtils {
     }
 
     public String generateTokenFromUsername(String username) {
-        // return Jwts.builder().setSubject(username).setIssuedAt(new Date())
-        //         .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs)).signWith(key(), SignatureAlgorithm.HS256)
-        //         .compact();
         return Jwts.builder()
             .setSubject((username))
             .setIssuedAt(new Date())
@@ -66,5 +64,15 @@ public class JwtUtils {
         }
 
         return false;
+    }
+
+    public String parseJwt(HttpServletRequest request) {
+        String headerAuth = request.getHeader("Authorization");
+
+        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
+            return headerAuth.substring(7);
+        }
+
+        return null;
     }
 }

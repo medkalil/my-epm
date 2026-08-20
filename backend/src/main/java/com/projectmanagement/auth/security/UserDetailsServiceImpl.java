@@ -1,7 +1,7 @@
 package com.projectmanagement.auth.security;
 
-import com.projectmanagement.auth.entity.User;
-import com.projectmanagement.auth.repository.UserRepository;
+import com.projectmanagement.user.entity.User;
+import com.projectmanagement.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
