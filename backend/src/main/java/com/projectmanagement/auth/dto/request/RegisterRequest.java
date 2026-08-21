@@ -6,6 +6,5 @@ public record RegisterRequest(
     @NotBlank(message = "Username is required")
     String username,
     @NotBlank(message = "Password is required")
-    String password,
-    String role // Optional, or can be defaulted in service
+    String password
 ) {}

@@ -63,8 +63,7 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(jwt,
                 refreshToken.getToken(),
                 userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getAuthorities().stream().findFirst().get().getAuthority()));
+                userDetails.getUsername()));
     }
 
     @PostMapping("/register")
@@ -79,7 +78,6 @@ public class AuthController {
         User user = new User();
         user.setName(registerRequest.username());
         user.setPassword(encoder.encode(registerRequest.password()));
-        user.setRole(registerRequest.role() != null ? registerRequest.role() : "ROLE_USER");
 
         User savedUser = userRepository.save(user);
 

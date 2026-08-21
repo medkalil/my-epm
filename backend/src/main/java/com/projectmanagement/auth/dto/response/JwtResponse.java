@@ -5,10 +5,9 @@ public record JwtResponse(
     String type,
     String refreshToken,
     Long id,
-    String username,
-    String role
+    String username
 ) {
-    public JwtResponse(String accessToken, String refreshToken, Long id, String username, String role) {
-        this(accessToken, "Bearer", refreshToken, id, username, role);
+    public JwtResponse(String accessToken, String refreshToken, Long id, String username) {
+        this(accessToken, "Bearer", refreshToken, id, username);
     }
 }
