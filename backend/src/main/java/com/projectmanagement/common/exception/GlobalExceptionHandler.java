@@ -5,6 +5,7 @@ import com.projectmanagement.common.dto.ErrorResponse;
 import com.projectmanagement.user.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -82,6 +83,21 @@ public class GlobalExceptionHandler {
                 "Validation failed",
                 errors
         );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // if body is empty this will be triggred
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex) {
+
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Request body is required",
+                Map.of("body", "Request body is required")
+        );
+
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
