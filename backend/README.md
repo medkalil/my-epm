@@ -66,25 +66,81 @@ If a migration file that was already applied is modified, Flyway will detect a c
 
 ### Authentication System
 
-The authentication system uses JWT access tokens and database-backed refresh tokens:
+The authentication system uses stateless JWT access tokens combined with database-backed refresh tokens.
 
-- **Register:** `POST /api/v1/auth/register` (Registers a new user account)
-- **Login:** `POST /api/v1/auth/login` (Returns JWT access token & refresh token)
-- **Refresh Token:** `POST /api/v1/auth/refreshtoken` (Generates a new access token using a valid refresh token)
+#### Endpoints
+* **Register:** `POST /api/v1/auth/register` — Registers a new user account.
+* **Login:** `POST /api/v1/auth/login` — Authenticates credentials and returns JWT access token, refresh token, user ID, default active organization ID (`currentOrganizationId`), and the list of joined organizations.
+* **Refresh Token:** `POST /api/v1/auth/refreshtoken` — Generates a new JWT access token using a valid, unexpired refresh token.
 
-#### How It Works:
-1. **Registration:** User submits credentials; password is hashed with BCrypt and stored in PostgreSQL.
-2. **Authentication:** User logs in; server returns a short-lived JWT access token and saves a long-lived UUID refresh token in the database.
-3. **Authorization:** Client sends `Authorization: Bearer <JWT_ACCESS_TOKEN>` in HTTP headers. `AuthTokenFilter` validates the signature and sets authentication context.
-4. **Token Refresh:** When the access token expires, client sends the refresh token to `/api/v1/auth/refreshtoken` to receive a new access token.
+#### How Authentication Works
+1. **Registration:** Password is hashed using `BCryptPasswordEncoder` and persisted in the `users` table.
+2. **Login Response Payload:**
+   ```json
+   {
+     "token": "eyJhbGci...",
+     "type": "Bearer",
+     "refreshToken": "a8c9b2f1...",
+     "id": 1,
+     "username": "john_doe",
+     "currentOrganizationId": 5,
+     "organizations": [
+       {
+         "id": 5,
+         "name": "Acme Corp",
+         "slug": "acme-corp",
+         "ownerId": 1
+       }
+     ]
+   }
+   ```
+3. **Stateless Authorization:** The client includes `Authorization: Bearer <JWT>` in HTTP request headers. `AuthTokenFilter` validates the signature and populates Spring Security's `SecurityContextHolder`.
+4. **Token Refresh:** When an access token expires, the client sends `{ "refreshToken": "..." }` to `/api/v1/auth/refreshtoken` to retrieve a fresh access token without re-entering credentials.
+
+---
 
 ### Organization System (SaaS Multi-Tenancy)
 
-Organizations act as multi-tenant customer workspaces:
+Organizations serve as tenant workspace containers. A single user can belong to multiple organizations with distinct roles in each.
 
-- **Create Organization:** `POST /api/v1/organizations` (Creates organization and sets creator as `OWNER`)
-- **Get User Organizations:** `GET /api/v1/organizations/my` (Lists all organizations the user belongs to)
-- **Get Organization by ID:** `GET /api/v1/organizations/{id}`
-- **Get Organization by Slug:** `GET /api/v1/organizations/slug/{slug}`
-- **Add Member:** `POST /api/v1/organizations/{id}/members` (Adds user with role: `ADMIN`, `MEMBER`, `GUEST`)
-- **Get Members:** `GET /api/v1/organizations/{id}/members` (Lists members of an organization)
+#### Multi-Tenancy Architecture & Entities
+* **`organizations` table:** Represents the tenant workspace (`id`, `name`, `slug`, `owner_id`, `created_at`, `updated_at`).
+* **`organization_members` table:** Join table managing user membership and organization-scoped roles (`organization_id`, `user_id`, `role`, `joined_at`).
+* **Organization Roles (`OrganizationRole` Enum):**
+  * `OWNER` — Creator or primary manager of the organization (full administrative rights).
+  * `ADMIN` — Organization administrator (can manage members and workspace resources).
+  * `MEMBER` — Standard workspace member (can access workspace resources).
+  * `GUEST` — Read-only / limited workspace guest.
+
+---
+
+#### Security & Access Guards (`OrgSecurity`)
+
+All organization-scoped endpoints are protected declaratively using Spring Security SpEL expressions powered by the `@Component("orgSecurity")` bean:
+
+* **Membership Check (`@PreAuthorize("@orgSecurity.isMember(#id)")`)**: Ensures the authenticated user belongs to the target organization (`organization_members`).
+* **Role Check (`@PreAuthorize("@orgSecurity.hasRole(#id, 'OWNER', 'ADMIN')")`)**: Enforces specific administrative privileges (e.g., adding members).
+
+If a security check fails, `GlobalExceptionHandler` intercept `AccessDeniedException` and returns a **403 Forbidden** response payload.
+
+---
+
+#### Organization API Reference
+
+| HTTP Method | Endpoint | Authorization Guard | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/organizations` | Authenticated | Creates a new organization; automatically sets creator as `OWNER`. |
+| `GET` | `/api/v1/organizations/my` | Authenticated | Lists all organizations the authenticated user belongs to. |
+| `GET` | `/api/v1/organizations/{id}` | `@orgSecurity.isMember(#id)` | Retrieves organization details by ID. |
+| `GET` | `/api/v1/organizations/slug/{slug}` | Authenticated | Retrieves organization details by unique slug. |
+| `POST` | `/api/v1/organizations/{id}/members` | `@orgSecurity.hasRole(#id, 'OWNER', 'ADMIN')` | Adds a user to the organization with a designated role. |
+| `GET` | `/api/v1/organizations/{id}/members` | `@orgSecurity.isMember(#id)` | Lists all members and roles in the organization. |
+
+---
+
+#### Client-Side Workspace Lifecycle
+
+1. **On Login:** The frontend receives `currentOrganizationId` and `organizations` array from `JwtResponse`, initializing the active workspace in state or `localStorage`.
+2. **On Organization Creation (`POST /api/v1/organizations`):** The backend returns the newly created `OrganizationResponse` (including its generated `id`). The frontend immediately updates its active workspace ID to the new ID.
+3. **Subsequent API Calls:** The frontend appends the active `orgId` to nested REST paths (e.g., `/api/v1/organizations/{orgId}/projects`).
+

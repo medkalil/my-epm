@@ -8,6 +8,7 @@ import com.projectmanagement.organization.service.OrganizationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +39,7 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@orgSecurity.isMember(#id)")
     public ResponseEntity<OrganizationResponse> getOrganizationById(@PathVariable Long id) {
         OrganizationResponse response = organizationService.getOrganizationById(id);
         return ResponseEntity.ok(response);
@@ -50,6 +52,7 @@ public class OrganizationController {
     }
 
     @PostMapping("/{id}/members")
+    @PreAuthorize("@orgSecurity.hasRole(#id, 'OWNER', 'ADMIN')")
     public ResponseEntity<OrganizationMemberResponse> addMember(
             @PathVariable Long id,
             @Valid @RequestBody AddMemberRequest request) {
@@ -58,6 +61,7 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}/members")
+    @PreAuthorize("@orgSecurity.isMember(#id)")
     public ResponseEntity<List<OrganizationMemberResponse>> getMembers(@PathVariable Long id) {
         List<OrganizationMemberResponse> members = organizationService.getMembers(id);
         return ResponseEntity.ok(members);

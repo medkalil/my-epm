@@ -12,6 +12,8 @@ import com.projectmanagement.user.repository.UserRepository;
 import com.projectmanagement.auth.security.JwtUtils;
 import com.projectmanagement.user.mapper.UserMapper;
 import com.projectmanagement.auth.service.RefreshTokenService;
+import com.projectmanagement.organization.dto.response.OrganizationResponse;
+import com.projectmanagement.organization.service.OrganizationService;
 
 import jakarta.validation.Valid;
 
@@ -23,6 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -33,19 +37,22 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
     private final RefreshTokenService refreshTokenService;
+    private final OrganizationService organizationService;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserRepository userRepository,
                           PasswordEncoder encoder,
                           JwtUtils jwtUtils,
                           UserMapper userMapper,
-                          RefreshTokenService refreshTokenService) {
+                          RefreshTokenService refreshTokenService,
+                          OrganizationService organizationService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.encoder = encoder;
         this.jwtUtils = jwtUtils;
         this.userMapper = userMapper;
         this.refreshTokenService = refreshTokenService;
+        this.organizationService = organizationService;
     }
 
     @PostMapping("/login")
@@ -60,10 +67,15 @@ public class AuthController {
         User userDetails = (User) authentication.getPrincipal();
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 
+        List<OrganizationResponse> userOrgs = organizationService.getUserOrganizations(userDetails.getUsername());
+        Long currentOrgId = userOrgs.isEmpty() ? null : userOrgs.get(0).id();
+
         return ResponseEntity.ok(new JwtResponse(jwt,
                 refreshToken.getToken(),
                 userDetails.getId(),
-                userDetails.getUsername()));
+                userDetails.getUsername(),
+                currentOrgId,
+                userOrgs));
     }
 
     @PostMapping("/register")
