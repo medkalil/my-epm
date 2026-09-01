@@ -68,7 +68,7 @@ public class AuthController {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 
         List<OrganizationResponse> userOrgs = organizationService.getUserOrganizations(userDetails.getUsername());
-        Long currentOrgId = userOrgs.isEmpty() ? null : userOrgs.get(0).id();
+        Long currentOrgId = organizationService.getActiveOrganizationId(userDetails.getUsername());
 
         return ResponseEntity.ok(new JwtResponse(jwt,
                 refreshToken.getToken(),

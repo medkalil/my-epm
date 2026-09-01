@@ -55,8 +55,9 @@ public class OrganizationServiceImpl implements OrganizationService {
         Organization organization = new Organization(request.name(), request.slug(), owner);
         Organization savedOrg = organizationRepository.save(organization);
 
-        // Automatically add owner as OWNER role member
-        OrganizationMember ownerMember = new OrganizationMember(savedOrg, owner, OrganizationRole.OWNER);
+        // Deactivate existing organization memberships for the owner and set the new one as active
+        memberRepository.deactivateAllForUser(owner);
+        OrganizationMember ownerMember = new OrganizationMember(savedOrg, owner, OrganizationRole.OWNER, true);
         memberRepository.save(ownerMember);
 
         return organizationMapper.toResponse(savedOrg);
@@ -89,6 +90,45 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     @Transactional
+    public Long getActiveOrganizationId(String currentUsername) {
+        User user = userRepository.findByName(currentUsername)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + currentUsername));
+
+        return memberRepository.findByUserAndActiveTrue(user)
+                .map(m -> m.getOrganization().getId())
+                .orElseGet(() -> { // if no active organization, set the first one as active
+                    List<OrganizationMember> memberships = memberRepository.findByUser(user);
+                    if (memberships.isEmpty()) {
+                        return null;
+                    }
+                    OrganizationMember firstMember = memberships.get(0);
+                    firstMember.setActive(true);
+                    memberRepository.save(firstMember);
+                    return firstMember.getOrganization().getId();
+                });
+    }
+
+    @Override
+    @Transactional
+    public OrganizationResponse switchActiveOrganization(Long organizationId, String currentUsername) {
+        User user = userRepository.findByName(currentUsername)
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + currentUsername));
+
+        Organization org = organizationRepository.findById(organizationId)
+                .orElseThrow(() -> new OrganizationNotFoundException("Organization not found with ID: " + organizationId));
+
+        OrganizationMember member = memberRepository.findByOrganizationAndUser(org, user)
+                .orElseThrow(() -> new IllegalArgumentException("User is not a member of organization with ID: " + organizationId));
+
+        memberRepository.deactivateAllForUser(user);
+        member.setActive(true);
+        memberRepository.save(member);
+
+        return organizationMapper.toResponse(org);
+    }
+
+    @Override
+    @Transactional
     public OrganizationMemberResponse addMember(Long organizationId, AddMemberRequest request) {
         Organization org = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new OrganizationNotFoundException("Organization not found with ID: " + organizationId));
@@ -100,7 +140,8 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new IllegalArgumentException("User is already a member of this organization");
         }
 
-        OrganizationMember member = new OrganizationMember(org, user, request.role());
+        boolean hasActive = memberRepository.findByUserAndActiveTrue(user).isPresent();
+        OrganizationMember member = new OrganizationMember(org, user, request.role(), !hasActive);
         OrganizationMember savedMember = memberRepository.save(member);
 
         return organizationMemberMapper.toResponse(savedMember);

@@ -12,6 +12,8 @@ public interface OrganizationService {
     OrganizationResponse getOrganizationById(Long id);
     OrganizationResponse getOrganizationBySlug(String slug);
     List<OrganizationResponse> getUserOrganizations(String currentUsername);
+    Long getActiveOrganizationId(String currentUsername);
+    OrganizationResponse switchActiveOrganization(Long organizationId, String currentUsername);
     OrganizationMemberResponse addMember(Long organizationId, AddMemberRequest request);
     List<OrganizationMemberResponse> getMembers(Long organizationId);
 }

@@ -26,6 +26,9 @@ public class OrganizationMember {
     @Column(nullable = false, length = 30)
     private OrganizationRole role = OrganizationRole.MEMBER;
 
+    @Column(name = "is_active", nullable = false)
+    private boolean active = false;
+
     @Column(name = "joined_at", nullable = false, updatable = false)
     private Instant joinedAt = Instant.now();
 
@@ -35,6 +38,13 @@ public class OrganizationMember {
         this.organization = organization;
         this.user = user;
         this.role = role;
+    }
+
+    public OrganizationMember(Organization organization, User user, OrganizationRole role, boolean active) {
+        this.organization = organization;
+        this.user = user;
+        this.role = role;
+        this.active = active;
     }
 
     public Long getId() {
@@ -67,6 +77,14 @@ public class OrganizationMember {
 
     public void setRole(OrganizationRole role) {
         this.role = role;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public Instant getJoinedAt() {

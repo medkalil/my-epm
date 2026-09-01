@@ -9,5 +9,6 @@ public record OrganizationMemberResponse(
         Long userId,
         String userName,
         OrganizationRole role,
+        boolean active,
         Instant joinedAt
 ) {}

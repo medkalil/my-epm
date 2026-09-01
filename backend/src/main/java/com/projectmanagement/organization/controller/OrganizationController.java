@@ -66,4 +66,13 @@ public class OrganizationController {
         List<OrganizationMemberResponse> members = organizationService.getMembers(id);
         return ResponseEntity.ok(members);
     }
+
+    @PostMapping("/{id}/switch")
+    @PreAuthorize("@orgSecurity.isMember(#id)")
+    public ResponseEntity<OrganizationResponse> switchActiveOrganization(
+            @PathVariable Long id,
+            Authentication authentication) {
+        OrganizationResponse response = organizationService.switchActiveOrganization(id, authentication.getName());
+        return ResponseEntity.ok(response);
+    }
 }
