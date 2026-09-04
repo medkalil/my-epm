@@ -20,7 +20,7 @@ public class OrgSecurity {
 
     public boolean isMember(Long orgId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
+        if (auth == null || !auth.isAuthenticated() || orgId == null) {
             return false;
         }
         return memberRepository.existsByOrganization_IdAndUser_Name(orgId, auth.getName());
@@ -28,7 +28,7 @@ public class OrgSecurity {
 
     public boolean hasRole(Long orgId, String... roles) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
+        if (auth == null || !auth.isAuthenticated() || orgId == null) {
             return false;
         }
         List<OrganizationRole> roleEnums = Arrays.stream(roles)

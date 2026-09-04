@@ -79,6 +79,7 @@
                             <version>1.6.3</version>
                         </path>
                     </annotationProcessorPaths>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
         </plugins>
