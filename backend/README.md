@@ -142,5 +142,42 @@ If a security check fails, `GlobalExceptionHandler` intercept `AccessDeniedExcep
 
 1. **On Login:** The frontend receives `currentOrganizationId` and `organizations` array from `JwtResponse`, initializing the active workspace in state or `localStorage`.
 2. **On Organization Creation (`POST /api/v1/organizations`):** The backend returns the newly created `OrganizationResponse` (including its generated `id`). The frontend immediately updates its active workspace ID to the new ID.
-3. **Subsequent API Calls:** The frontend appends the active `orgId` to nested REST paths (e.g., `/api/v1/organizations/{orgId}/projects`).
+3. **Subsequent API Calls:** The frontend appends the active `orgId` to nested REST paths or request query parameters (e.g., `/api/v1/projects?orgId=...`).
+
+---
+
+### Projects System
+
+Projects represent discrete units of work within an organization. A user can be associated with multiple projects across organizations via a many-to-many relationship (`project_user` join table).
+
+#### Project API Reference
+
+| HTTP Method | Endpoint | Authorization Guard | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/projects` | `@orgSecurity.isMember(#request.organizationId)` | Creates a new project in the organization and assigns members. |
+| `GET` | `/api/v1/projects/{id}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Retrieves project details by ID. |
+| `GET` | `/api/v1/projects/organization/{orgId}` | `@orgSecurity.isMember(#orgId)` | Lists all projects belonging to the organization. |
+| `PUT` | `/api/v1/projects/{id}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Updates project name and description. |
+| `DELETE` | `/api/v1/projects/{id}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Deletes a project by ID. |
+| `POST` | `/api/v1/projects/{id}/members/{userId}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Adds a member to the project (must already belong to organization). |
+| `DELETE` | `/api/v1/projects/{id}/members/{userId}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Removes a member from the project. |
+
+---
+
+### Tasks System
+
+Tasks are individual work items tied to a Project and an Organization. Tasks use full JPA relationships with `@ManyToOne` references to `Project`, `Organization`, and an optional assigned user (`affectedUser`).
+
+#### Task API Reference
+
+| HTTP Method | Endpoint | Authorization Guard | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/tasks` | `@orgSecurity.isMember(#request.organizationId)` | Creates a new task under a project and organization. |
+| `GET` | `/api/v1/tasks/{id}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Retrieves task details by ID. |
+| `GET` | `/api/v1/tasks/project/{projectId}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Lists all tasks in a specific project. |
+| `GET` | `/api/v1/tasks/organization/{orgId}` | `@orgSecurity.isMember(#orgId)` | Lists all tasks belonging to an organization. |
+| `GET` | `/api/v1/tasks/user/{userId}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Lists all tasks assigned to a specific user within the organization. |
+| `PUT` | `/api/v1/tasks/{id}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Updates task title, description, status, or assignee. |
+| `DELETE` | `/api/v1/tasks/{id}?orgId={orgId}` | `@orgSecurity.isMember(#orgId)` | Deletes a task by ID. |
+
 

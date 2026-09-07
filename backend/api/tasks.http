@@ -1,0 +1,77 @@
+@baseUrl = http://localhost:8080
+@ALICE_TOKEN = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGljZSIsImlhdCI6MTc4ODc5NDk1OCwiZXhwIjoxNzg4ODgxMzU4fQ.qLP3MbB3uIJFLNH2FUqw7mX62Y-XFZcS87bnAgvquDA
+@BOB_TOKEN = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJib2IiLCJpYXQiOjE3ODg3OTUwMzAsImV4cCI6MTc4ODg4MTQzMH0.KLm2Z5JTCWGopZhiRaPuE0c8orpnzfvMEfIXW81qeXU
+
+
+### Create a Task
+POST {{baseUrl}}/api/v1/tasks
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+    "title": "Design Figma Mockups",
+    "description": "Create wireframes and interactive mockups for the homepage",
+    "status": "TODO",
+    "projectId": 1,
+    "organizationId": 6,
+    "affectedUserId": 5
+}
+###
+
+### Get Task by ID
+GET {{baseUrl}}/api/v1/tasks/1?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### List Tasks by Project
+GET {{baseUrl}}/api/v1/tasks/project/1?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### List Tasks by Organization
+GET {{baseUrl}}/api/v1/tasks/organization/6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### List Tasks Assigned to a User
+GET {{baseUrl}}/api/v1/tasks/user/5?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### Update Task (Status & Reassignment)
+PUT {{baseUrl}}/api/v1/tasks/1?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+    "title": "Design Figma Mockups - Approved",
+    "description": "Mockups approved by stakeholders",
+    "status": "IN_PROGRESS",
+    "affectedUserId": 5
+}
+###
+
+### Delete Task
+DELETE {{baseUrl}}/api/v1/tasks/1?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###

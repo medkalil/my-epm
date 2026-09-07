@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:8080
+@ALICE_TOKEN = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGljZSIsImlhdCI6MTc4ODc5NDk1OCwiZXhwIjoxNzg4ODgxMzU4fQ.qLP3MbB3uIJFLNH2FUqw7mX62Y-XFZcS87bnAgvquDA
+@BOB_TOKEN = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJib2IiLCJpYXQiOjE3ODg3OTUwMzAsImV4cCI6MTc4ODg4MTQzMH0.KLm2Z5JTCWGopZhiRaPuE0c8orpnzfvMEfIXW81qeXU
+
+
+### =========================
+### AUTH
+### =========================
+
+### Register Alice
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123"
+}
+###
+
+# Register Bob
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "password": "password123"
+}
+###
+
+### Login Alice
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123"
+}
+###
+
+### Login bob
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "password": "password123"
+}
+###

@@ -1,0 +1,111 @@
+@baseUrl = http://localhost:8080
+@ALICE_TOKEN = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGljZSIsImlhdCI6MTc4ODc5NDk1OCwiZXhwIjoxNzg4ODgxMzU4fQ.qLP3MbB3uIJFLNH2FUqw7mX62Y-XFZcS87bnAgvquDA
+@BOB_TOKEN = eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJib2IiLCJpYXQiOjE3ODg3OTUwMzAsImV4cCI6MTc4ODg4MTQzMH0.KLm2Z5JTCWGopZhiRaPuE0c8orpnzfvMEfIXW81qeXU
+
+
+
+### Create a Project
+POST {{baseUrl}}/api/v1/projects
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+    "name": "Website Redesign",
+    "description": "Revamp the company landing page and customer portal",
+    "organizationId": 6
+}
+###
+
+### Get Project by ID
+GET {{baseUrl}}/api/v1/projects/1?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### List All Projects for an Organization
+GET {{baseUrl}}/api/v1/projects/organization/6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### Update Project Details
+PUT {{baseUrl}}/api/v1/projects/1?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+    "name": "Website Redesign Phase 2",
+    "description": "Updated project description with extended scope"
+}
+###
+
+### Add Member to Project (Many-to-Many)
+POST {{baseUrl}}/api/v1/organizations/6/members
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+    "userId": 6,
+    "role": "MEMBER"
+}
+###
+
+### Add Bob (Newly added User) to the Project
+POST {{baseUrl}}/api/v1/projects/1/members/6?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### Remove Member from Project
+DELETE {{baseUrl}}/api/v1/projects/1/members/6?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### Delete Project: This cascades and automatically removes associated entries in `tasks` and `project_user` join tables.*
+DELETE {{baseUrl}}/api/v1/projects/2?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### Missing Authentication Token
+GET {{baseUrl}}/api/v1/projects/organization/5
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### Assign User Who Does Not Belong to the Organization
+POST {{baseUrl}}/api/v1/projects/1/members/1?orgId=7
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###
+
+### Non-Existent Project or Task ID
+GET {{baseUrl}}/api/v1/projects/99999?orgId=6
+Content-Type: application/json
+Authorization: Bearer {{ALICE_TOKEN}}
+
+{
+}
+###

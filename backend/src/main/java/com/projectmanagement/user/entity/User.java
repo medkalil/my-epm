@@ -1,14 +1,13 @@
 package com.projectmanagement.user.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.projectmanagement.project.model.Project;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -18,6 +17,9 @@ public class User implements UserDetails {
     private Long id;
     private String name;
     private String password;
+
+    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
+    private Set<Project> projects = new HashSet<>();
 
     public User() {}
 
@@ -66,5 +68,13 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public Set<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<Project> projects) {
+        this.projects = projects;
     }
 }
