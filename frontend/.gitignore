@@ -45,3 +45,15 @@ Thumbs.db
 
 # Optional TypeScript cache
 *.tsbuildinfo
+
+# Storybook
+storybook-static/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# Test caches
+.eslintcache

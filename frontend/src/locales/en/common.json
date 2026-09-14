@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "MY-EPM",
+    "tagline": "Enterprise Project Management"
+  },
+  "layout": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "tasks": "Tasks",
+    "organizations": "Organizations",
+    "settings": "Settings",
+    "security": "Security & Audit"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "logout": "Log out"
+  }
+}
