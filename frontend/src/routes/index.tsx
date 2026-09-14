@@ -61,7 +61,6 @@ const routes: RouteObject[] = [
       {
         element: <DashboardLayout />,
         children: [
-          { index: true, element: <Navigate to={ROUTES.dashboard} replace /> },
           { path: ROUTES.dashboard, element: withFallback(<DashboardPage />) },
           { path: ROUTES.projects.base, element: withFallback(<ProjectListPage />) },
           {

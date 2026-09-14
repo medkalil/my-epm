@@ -1,12 +1,12 @@
 import type { User } from '@/features/user/types/user.types';
 
 export interface LoginRequest {
-  name: string;
+  username: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  name: string;
+  username: string;
   password: string;
   email?: string;
 }
@@ -17,7 +17,7 @@ export interface AuthTokens {
   tokenType: string;
 }
 
-export interface RefreshTokenResponse extends AuthTokens {}
+export type RefreshTokenResponse = AuthTokens;
 
 export interface LoginResponse {
   tokens: AuthTokens;

@@ -12,6 +12,12 @@ interface AuthState {
   clear: () => void;
 }
 
+interface PersistedAuthState {
+  user?: User | null;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -28,11 +34,19 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'epm-auth-store',
       partialize: (state) => ({
+        user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
       }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.accessToken) state.isAuthenticated = true;
+      merge: (persisted, current) => {
+        const persistedState = persisted as Partial<PersistedAuthState> | undefined;
+        return {
+          ...current,
+          ...persistedState,
+          accessToken: persistedState?.accessToken ?? null,
+          refreshToken: persistedState?.refreshToken ?? null,
+          isAuthenticated: !!persistedState?.accessToken,
+        };
       },
     },
   ),

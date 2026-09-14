@@ -7,8 +7,9 @@ import {
   ProjectOutlined,
   CheckSquareOutlined,
 } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ROUTES } from '@/routes/paths';
+import { useAuthStore } from '@/stores';
 
 const FEATURES = [
   {
@@ -34,6 +35,12 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  if (isAuthenticated) {
+    return <Navigate to={ROUTES.dashboard} replace />;
+  }
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Layout.Header

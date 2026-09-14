@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Form, Input, Card, Typography, Space, App } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
@@ -13,12 +13,12 @@ export function RegisterForm() {
   const registerMutation = useRegisterMutation();
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: { username: '', email: '', password: '', confirmPassword: '' },
   });
 
   const onSubmit = async ({ confirmPassword: _confirm, ...values }: RegisterFormValues) => {
@@ -42,14 +42,20 @@ export function RegisterForm() {
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item
           label="Username"
-          validateStatus={errors.name ? 'error' : ''}
-          help={errors.name?.message}
+          validateStatus={errors.username ? 'error' : ''}
+          help={errors.username?.message}
         >
-          <Input
-            prefix={<UserOutlined />}
-            placeholder="Choose a username"
-            autoComplete="username"
-            {...register('name')}
+          <Controller
+            control={control}
+            name="username"
+            render={({ field }) => (
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Choose a username"
+                autoComplete="username"
+                {...field}
+              />
+            )}
           />
         </Form.Item>
 
@@ -58,11 +64,17 @@ export function RegisterForm() {
           validateStatus={errors.email ? 'error' : ''}
           help={errors.email?.message}
         >
-          <Input
-            prefix={<MailOutlined />}
-            placeholder="Email (optional)"
-            autoComplete="email"
-            {...register('email')}
+          <Controller
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <Input
+                prefix={<MailOutlined />}
+                placeholder="Email (optional)"
+                autoComplete="email"
+                {...field}
+              />
+            )}
           />
         </Form.Item>
 
@@ -71,11 +83,17 @@ export function RegisterForm() {
           validateStatus={errors.password ? 'error' : ''}
           help={errors.password?.message}
         >
-          <Input.Password
-            prefix={<LockOutlined />}
-            placeholder="At least 6 characters"
-            autoComplete="new-password"
-            {...register('password')}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="At least 6 characters"
+                autoComplete="new-password"
+                {...field}
+              />
+            )}
           />
         </Form.Item>
 
@@ -84,11 +102,17 @@ export function RegisterForm() {
           validateStatus={errors.confirmPassword ? 'error' : ''}
           help={errors.confirmPassword?.message}
         >
-          <Input.Password
-            prefix={<LockOutlined />}
-            placeholder="Repeat your password"
-            autoComplete="new-password"
-            {...register('confirmPassword')}
+          <Controller
+            control={control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Repeat your password"
+                autoComplete="new-password"
+                {...field}
+              />
+            )}
           />
         </Form.Item>
 

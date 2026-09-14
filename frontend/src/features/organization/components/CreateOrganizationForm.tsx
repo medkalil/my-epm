@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, Input, Select, Button, Space, App } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
@@ -38,7 +38,7 @@ export function CreateOrganizationForm({
   const createMutation = useCreateOrganization();
 
   const {
-    register,
+    control,
     handleSubmit,
     watch,
     formState: { errors },
@@ -68,9 +68,12 @@ export function CreateOrganizationForm({
           validateStatus={errors.name ? 'error' : ''}
           help={errors.name?.message}
         >
-          <Input
-            placeholder="e.g. Acme Corporation"
-            {...register('name')}
+          <Controller
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <Input placeholder="e.g. Acme Corporation" {...field} />
+            )}
           />
         </Form.Item>
         <Form.Item
@@ -78,9 +81,12 @@ export function CreateOrganizationForm({
           validateStatus={errors.slug ? 'error' : ''}
           help={errors.slug?.message}
         >
-          <Input
-            placeholder="e.g. acme-corp"
-            {...register('slug')}
+          <Controller
+            control={control}
+            name="slug"
+            render={({ field }) => (
+              <Input placeholder="e.g. acme-corp" {...field} />
+            )}
           />
         </Form.Item>
         <Button type="primary" icon={<RightOutlined />} iconPosition="end" onClick={onNext} block>

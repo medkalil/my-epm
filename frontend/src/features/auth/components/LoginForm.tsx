@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Form, Input, Card, Typography, Space, App } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
@@ -13,17 +13,16 @@ export function LoginForm() {
   const loginMutation = useLoginMutation();
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { name: '', password: '' },
+    defaultValues: { username: '', password: '' },
   });
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      console.log("aaaaaaaaaaaaaaaaaaa")
       await loginMutation.mutateAsync(values);
     } catch (error) {
       message.error(getApiErrorMessage(error));
@@ -42,14 +41,20 @@ export function LoginForm() {
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item
           label="Username"
-          validateStatus={errors.name ? 'error' : ''}
-          help={errors.name?.message}
+          validateStatus={errors.username ? 'error' : ''}
+          help={errors.username?.message}
         >
-          <Input
-            prefix={<UserOutlined />}
-            placeholder="Enter your username"
-            autoComplete="username"
-            {...register('name')}
+          <Controller
+            control={control}
+            name="username"
+            render={({ field }) => (
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Enter your username"
+                autoComplete="username"
+                {...field}
+              />
+            )}
           />
         </Form.Item>
 
@@ -58,11 +63,17 @@ export function LoginForm() {
           validateStatus={errors.password ? 'error' : ''}
           help={errors.password?.message}
         >
-          <Input.Password
-            prefix={<LockOutlined />}
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            {...register('password')}
+          <Controller
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                {...field}
+              />
+            )}
           />
         </Form.Item>
 

@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type { InternalAxiosRequestConfig , AxiosError } from 'axios';
 import { env } from '@/config/env';
-import { STORAGE_KEYS, API_ENDPOINTS } from '@/config/constants';
+import { API_ENDPOINTS } from '@/config/constants';
+import { useAuthStore } from '@/stores';
 import type { ApiError } from '@/types/api';
 
 interface TokenRefreshResponse {
@@ -30,7 +31,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+  const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -54,7 +55,7 @@ api.interceptors.response.use(
       !isAuthEndpoint &&
       originalRequest
     ) {
-      const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+      const refreshToken = useAuthStore.getState().refreshToken;
 
       if (!refreshToken) {
         clearAuthTokens();
@@ -79,8 +80,7 @@ api.interceptors.response.use(
           `${env.apiBaseUrl}${API_ENDPOINTS.auth.refresh}`,
           { refreshToken },
         );
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.accessToken);
-        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
+        useAuthStore.getState().setTokens(data.accessToken, data.refreshToken);
         processQueue(null, data.accessToken);
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return api(originalRequest);
@@ -99,8 +99,7 @@ api.interceptors.response.use(
 );
 
 export function clearAuthTokens(): void {
-  localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-  localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+  useAuthStore.getState().clear();
 }
 
 export function getApiErrorMessage(error: unknown): string {
