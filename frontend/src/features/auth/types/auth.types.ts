@@ -20,7 +20,8 @@ export interface AuthTokens {
 export type RefreshTokenResponse = AuthTokens;
 
 export interface LoginResponse {
-  tokens: AuthTokens;
+  token: string;
+  refreshToken: string,
   user: User;
   activeOrganizationId: number | null;
 }

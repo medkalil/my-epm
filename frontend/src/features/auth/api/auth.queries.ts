@@ -12,8 +12,8 @@ export function useLoginMutation() {
 
   return useMutation({
     mutationFn: (payload: LoginRequest) => authService.login(payload),
-    onSuccess: ({ tokens, user }) => {
-      setTokens(tokens.accessToken, tokens.refreshToken);
+    onSuccess: ({ token, refreshToken, user }) => {
+      setTokens(token, refreshToken);
       setUser(user);
       navigate(ROUTES.dashboard, { replace: true });
     },
