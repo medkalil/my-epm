@@ -46,7 +46,7 @@ export function LoginForm() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       await loginMutation.mutateAsync({
-        username: values.username,
+        identifier: values.username,
         password: values.password,
       });
       message.success('Signed in successfully');

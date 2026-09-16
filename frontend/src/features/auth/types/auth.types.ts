@@ -1,7 +1,7 @@
 import type { Organization } from '@/features/organization/types/organization.types';
 
 export interface LoginRequest {
-  username: string;
+  identifier: string;
   password: string;
 }
 

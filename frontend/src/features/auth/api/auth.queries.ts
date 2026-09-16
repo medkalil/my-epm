@@ -59,7 +59,7 @@ export function useRegisterMutation() {
 
       // 2. Auto-authenticate to obtain JWT session
       const loginData = await authService.login({
-        username: payload.username,
+        identifier: payload.username,
         password: payload.password,
       });
       return loginData;

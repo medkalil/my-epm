@@ -2,7 +2,11 @@ import { z } from 'zod';
 import { nameSchema, passwordSchema, emailSchema } from '@/lib/zod';
 
 export const loginSchema = z.object({
-  username: nameSchema,
+  username: z
+    .string()
+    .min(1, 'Username or email is required')
+    .min(2, 'Username or email must be at least 2 characters')
+    .max(100, 'Username or email must not exceed 100 characters'),
   password: passwordSchema,
   rememberSession: z.boolean().optional(),
   workspaceSlug: z.string().optional(),

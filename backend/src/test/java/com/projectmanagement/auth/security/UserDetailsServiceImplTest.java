@@ -37,8 +37,22 @@ class UserDetailsServiceImplTest {
     }
 
     @Test
+    void loadUserByEmail_emailExists_returnsUserDetails() {
+        User user = new User(1L, "alice", "encodedPass");
+        when(userRepository.findByName("alice@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername("alice@example.com");
+
+        assertNotNull(userDetails);
+        assertEquals("alice", userDetails.getUsername());
+        assertEquals("encodedPass", userDetails.getPassword());
+    }
+
+    @Test
     void loadUserByUsername_userNotFound_throwsException() {
         when(userRepository.findByName("unknown")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("unknown")).thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class, () ->
                 userDetailsService.loadUserByUsername("unknown"));
