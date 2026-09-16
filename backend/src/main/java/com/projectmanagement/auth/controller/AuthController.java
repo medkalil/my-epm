@@ -74,6 +74,8 @@ public class AuthController {
                 refreshToken.getToken(),
                 userDetails.getId(),
                 userDetails.getUsername(),
+                userDetails.getEmail(),
+                userDetails.getFullName(),
                 currentOrgId,
                 userOrgs));
     }
@@ -86,10 +88,18 @@ public class AuthController {
                     .body("Error: Username is already taken!");
         }
 
+        if (userRepository.findByEmail(registerRequest.email()).isPresent()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Error: Email is already in use!");
+        }
+
         // Create new user's account
         User user = new User();
         user.setName(registerRequest.username());
         user.setPassword(encoder.encode(registerRequest.password()));
+        user.setEmail(registerRequest.email());
+        user.setFullName(registerRequest.fullName());
 
         User savedUser = userRepository.save(user);
 

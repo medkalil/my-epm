@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nameSchema, passwordSchema } from '@/lib/zod';
+import { nameSchema, passwordSchema, emailSchema } from '@/lib/zod';
 
 export const loginSchema = z.object({
   username: nameSchema,
@@ -13,14 +13,10 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export const registerSchema = z
   .object({
     username: nameSchema,
+    fullName: z.string().min(2, 'Full name is required'),
+    workEmail: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string().min(1, 'Please confirm your password'),
-    fullName: z.string().optional(),
-    workEmail: z
-      .string()
-      .email('Invalid work email address')
-      .optional()
-      .or(z.literal('')),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'],

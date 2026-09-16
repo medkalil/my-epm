@@ -26,6 +26,8 @@ public class UserServiceImpl implements UserService {
     public UserResponse createUser(CreateUserRequest createUserRequest) {
         User user = new User();
         user.setName(createUserRequest.name());
+        user.setEmail(createUserRequest.email());
+        user.setFullName(createUserRequest.fullName());
         User saved = userRepository.save(user);
         
         return userMapper.toResponse(saved);

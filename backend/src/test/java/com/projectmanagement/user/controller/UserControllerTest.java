@@ -45,8 +45,8 @@ class UserControllerTest {
 
     @Test
     void create_success() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("alice");
-        UserResponse response = new UserResponse(1L, "alice");
+        CreateUserRequest request = new CreateUserRequest("alice", "alice@example.com", "Alice Vance");
+        UserResponse response = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
 
         when(userService.createUser(any(CreateUserRequest.class))).thenReturn(response);
 
@@ -55,12 +55,14 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("alice"));
+                .andExpect(jsonPath("$.name").value("alice"))
+                .andExpect(jsonPath("$.email").value("alice@example.com"))
+                .andExpect(jsonPath("$.fullName").value("Alice Vance"));
     }
 
     @Test
-    void create_blankName_returns400() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("");
+    void create_blankFields_returns400() throws Exception {
+        CreateUserRequest request = new CreateUserRequest("", "", "");
 
         mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -72,7 +74,7 @@ class UserControllerTest {
 
     @Test
     void getById_success() throws Exception {
-        UserResponse response = new UserResponse(1L, "alice");
+        UserResponse response = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
         when(userService.getUserById(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/users/1"))
@@ -93,7 +95,9 @@ class UserControllerTest {
 
     @Test
     void getAll_success() throws Exception {
-        List<UserResponse> list = List.of(new UserResponse(1L, "alice"), new UserResponse(2L, "bob"));
+        List<UserResponse> list = List.of(
+                new UserResponse(1L, "alice", "alice@example.com", "Alice Vance"),
+                new UserResponse(2L, "bob", "bob@example.com", "Bob Stone"));
         when(userService.getAll()).thenReturn(list);
 
         mockMvc.perform(get("/api/v1/users"))

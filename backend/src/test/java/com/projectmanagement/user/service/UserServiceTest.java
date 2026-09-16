@@ -37,13 +37,13 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = new User(1L, "alice", "pass");
-        userResponse = new UserResponse(1L, "alice");
+        user = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
+        userResponse = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
     }
 
     @Test
     void createUser_success() {
-        CreateUserRequest request = new CreateUserRequest("alice");
+        CreateUserRequest request = new CreateUserRequest("alice", "alice@example.com", "Alice Vance");
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(userMapper.toResponse(user)).thenReturn(userResponse);
 
@@ -52,6 +52,8 @@ class UserServiceTest {
         assertNotNull(result);
         assertEquals(1L, result.id());
         assertEquals("alice", result.name());
+        assertEquals("alice@example.com", result.email());
+        assertEquals("Alice Vance", result.fullName());
         verify(userRepository).save(any(User.class));
     }
 
@@ -76,8 +78,8 @@ class UserServiceTest {
 
     @Test
     void getAll_returnsList() {
-        User user2 = new User(2L, "bob", "pass2");
-        UserResponse response2 = new UserResponse(2L, "bob");
+        User user2 = new User(2L, "bob", "pass2", "bob@example.com", "Bob Stone");
+        UserResponse response2 = new UserResponse(2L, "bob", "bob@example.com", "Bob Stone");
 
         when(userRepository.findAll()).thenReturn(List.of(user, user2));
         when(userMapper.toResponse(user)).thenReturn(userResponse);

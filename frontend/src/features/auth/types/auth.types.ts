@@ -7,6 +7,8 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   username: string;
+  email: string;
+  fullName: string;
   password: string;
 }
 
@@ -27,11 +29,15 @@ export interface LoginResponse {
   refreshToken: string;
   id: number;
   username: string;
+  email?: string;
+  fullName?: string;
   currentOrganizationId?: number | null;
   organizations?: Organization[];
 }
 
 export interface RegisterResponse {
   id: number;
-  username: string;
+  name: string;
+  email?: string;
+  fullName?: string;
 }

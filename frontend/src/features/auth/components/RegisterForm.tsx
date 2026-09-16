@@ -11,7 +11,6 @@ import {
   Segmented,
   Checkbox,
   Tag,
-  Alert,
   App,
 } from 'antd';
 import {
@@ -23,7 +22,7 @@ import {
   ApartmentOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { registerSchema, type RegisterFormValues } from '../schemas/auth.schema';
 import { useRegisterMutation } from '../api/auth.queries';
 import { getApiErrorMessage } from '@/lib/axios';
@@ -33,7 +32,6 @@ const { Title, Text } = Typography;
 
 export function RegisterForm() {
   const { message } = App.useApp();
-  const navigate = useNavigate();
   const registerMutation = useRegisterMutation();
   const [onboardingMode, setOnboardingMode] = useState<string>('create');
 
@@ -67,6 +65,8 @@ export function RegisterForm() {
     try {
       await registerMutation.mutateAsync({
         username: values.username,
+        email: values.workEmail,
+        fullName: values.fullName,
         password: values.password,
       });
       message.success('Account registered successfully! Welcome to MY-EPM.');
@@ -126,7 +126,16 @@ export function RegisterForm() {
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         {/* Full Name & Work Email in responsive row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Form.Item label={<span style={{ fontWeight: 600, fontSize: 12 }}>Full Name</span>} style={{ marginBottom: 12 }}>
+          <Form.Item
+            label={
+              <span style={{ fontWeight: 600, fontSize: 12 }}>
+                Full Name <span style={{ color: '#ef4444' }}>*</span>
+              </span>
+            }
+            validateStatus={errors.fullName ? 'error' : ''}
+            help={errors.fullName?.message}
+            style={{ marginBottom: 12 }}
+          >
             <Controller
               control={control}
               name="fullName"
@@ -136,7 +145,16 @@ export function RegisterForm() {
             />
           </Form.Item>
 
-          <Form.Item label={<span style={{ fontWeight: 600, fontSize: 12 }}>Work Email</span>} style={{ marginBottom: 12 }}>
+          <Form.Item
+            label={
+              <span style={{ fontWeight: 600, fontSize: 12 }}>
+                Work Email <span style={{ color: '#ef4444' }}>*</span>
+              </span>
+            }
+            validateStatus={errors.workEmail ? 'error' : ''}
+            help={errors.workEmail?.message}
+            style={{ marginBottom: 12 }}
+          >
             <Controller
               control={control}
               name="workEmail"

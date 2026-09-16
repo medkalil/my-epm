@@ -17,7 +17,12 @@ export function useLoginMutation() {
     mutationFn: (payload: LoginRequest) => authService.login(payload),
     onSuccess: (data) => {
       setTokens(data.token, data.refreshToken);
-      setUser({ id: data.id, name: data.username, username: data.username });
+      setUser({
+        id: data.id,
+        name: data.username,
+        username: data.username,
+        email: data.email,
+      });
 
       const orgs = data.organizations ?? [];
       setOrganizations(orgs);
@@ -47,6 +52,8 @@ export function useRegisterMutation() {
       // 1. Register with backend
       await authService.register({
         username: payload.username,
+        email: payload.email,
+        fullName: payload.fullName,
         password: payload.password,
       });
 
@@ -59,7 +66,12 @@ export function useRegisterMutation() {
     },
     onSuccess: (data) => {
       setTokens(data.token, data.refreshToken);
-      setUser({ id: data.id, name: data.username, username: data.username });
+      setUser({
+        id: data.id,
+        name: data.username,
+        username: data.username,
+        email: data.email,
+      });
       setOrganizations(data.organizations ?? []);
       setActiveOrganization(null);
       // Navigate to guided organization creation

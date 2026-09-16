@@ -78,11 +78,12 @@ class AuthControllerTest {
 
     @Test
     void register_success() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice", "password123");
-        User savedUser = new User(1L, "alice", "encodedPassword");
-        UserResponse userResponse = new UserResponse(1L, "alice");
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123");
+        User savedUser = new User(1L, "alice", "encodedPassword", "alice@example.com", "Alice Vance");
+        UserResponse userResponse = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
 
         when(userRepository.findByName("alice")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.empty());
         when(encoder.encode("password123")).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(userMapper.toResponse(savedUser)).thenReturn(userResponse);
@@ -92,13 +93,15 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("alice"));
+                .andExpect(jsonPath("$.name").value("alice"))
+                .andExpect(jsonPath("$.email").value("alice@example.com"))
+                .andExpect(jsonPath("$.fullName").value("Alice Vance"));
     }
 
     @Test
     void register_usernameAlreadyTaken_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice", "password123");
-        User existing = new User(1L, "alice", "pass");
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123");
+        User existing = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
 
         when(userRepository.findByName("alice")).thenReturn(Optional.of(existing));
 
@@ -110,8 +113,23 @@ class AuthControllerTest {
     }
 
     @Test
+    void register_emailAlreadyTaken_returns400() throws Exception {
+        RegisterRequest request = new RegisterRequest("alice2", "alice@example.com", "Alice Vance 2", "password123");
+        User existing = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
+
+        when(userRepository.findByName("alice2")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(existing));
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Error: Email is already in use!"));
+    }
+
+    @Test
     void register_validationFailure_blankFields_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "");
+        RegisterRequest request = new RegisterRequest("", "", "", "");
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -124,7 +142,7 @@ class AuthControllerTest {
     @Test
     void login_success() throws Exception {
         LoginRequest request = new LoginRequest("alice", "password123");
-        User userDetails = new User(1L, "alice", "encodedPass");
+        User userDetails = new User(1L, "alice", "encodedPass", "alice@example.com", "Alice Vance");
         Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
         RefreshToken refreshToken = new RefreshToken();
@@ -169,7 +187,7 @@ class AuthControllerTest {
     @Test
     void refreshtoken_success() throws Exception {
         TokenRefreshRequest request = new TokenRefreshRequest("valid-refresh-token");
-        User user = new User(1L, "alice", "pass");
+        User user = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken("valid-refresh-token");
