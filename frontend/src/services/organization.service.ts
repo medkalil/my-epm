@@ -6,7 +6,6 @@ import type {
   CreateOrganizationRequest,
   AddMemberRequest,
 } from '@/features/organization/types/organization.types';
-import type { Page, PageParams } from '@/types/api';
 
 export const organizationService = {
   async create(payload: CreateOrganizationRequest): Promise<Organization> {
@@ -14,10 +13,8 @@ export const organizationService = {
     return data;
   },
 
-  async getMine(params?: PageParams): Promise<Page<Organization>> {
-    const { data } = await api.get<Page<Organization>>(API_ENDPOINTS.organizations.my, {
-      params,
-    });
+  async getMine(): Promise<Organization[]> {
+    const { data } = await api.get<Organization[]>(API_ENDPOINTS.organizations.my);
     return data;
   },
 
@@ -31,13 +28,9 @@ export const organizationService = {
     return data;
   },
 
-  async listMembers(
-    orgId: number,
-    params?: PageParams,
-  ): Promise<Page<OrganizationMember>> {
-    const { data } = await api.get<Page<OrganizationMember>>(
+  async listMembers(orgId: number): Promise<OrganizationMember[]> {
+    const { data } = await api.get<OrganizationMember[]>(
       API_ENDPOINTS.organizations.members(orgId),
-      { params },
     );
     return data;
   },

@@ -9,15 +9,12 @@ export default function OrgSecurityPage() {
   const orgId = Number(id);
 
   const { data } = useOrganizationMembers(orgId);
-  const members = data?.content ?? [];
+  const members = data ?? [];
 
-  const roleDistribution = members.reduce(
-    (acc, member) => {
-      acc[member.role] = (acc[member.role] ?? 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
+  const roleDistribution = members.reduce<Record<string, number>>((acc, member) => {
+    acc[member.role] = (acc[member.role] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <div>

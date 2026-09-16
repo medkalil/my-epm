@@ -38,7 +38,7 @@ export default function TaskListPage() {
 
   if (isLoading) return <LoadingSpinner />;
 
-  const allTasks = data?.content ?? [];
+  const allTasks = data ?? [];
   const tasks =
     activeTab === 'all'
       ? allTasks

@@ -1,4 +1,4 @@
-import type { User } from '@/features/user/types/user.types';
+import type { Organization } from '@/features/organization/types/organization.types';
 
 export interface LoginRequest {
   username: string;
@@ -8,7 +8,6 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   password: string;
-  email?: string;
 }
 
 export interface AuthTokens {
@@ -17,16 +16,22 @@ export interface AuthTokens {
   tokenType: string;
 }
 
-export type RefreshTokenResponse = AuthTokens;
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
 
 export interface LoginResponse {
   token: string;
-  refreshToken: string,
-  user: User;
-  activeOrganizationId: number | null;
+  type?: string;
+  refreshToken: string;
+  id: number;
+  username: string;
+  currentOrganizationId?: number | null;
+  organizations?: Organization[];
 }
 
 export interface RegisterResponse {
-  user: User;
-  message: string;
+  id: number;
+  username: string;
 }

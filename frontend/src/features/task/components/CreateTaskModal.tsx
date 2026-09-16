@@ -30,7 +30,7 @@ export function CreateTaskModal({ open, onClose, defaultProjectId }: CreateTaskM
   const { data: projectsData } = useProjects();
 
   const projectOptions =
-    projectsData?.content.map((p) => ({ label: p.name, value: p.id })) ?? [];
+    projectsData?.map((p) => ({ label: p.name, value: p.id })) ?? [];
 
   useEffect(() => {
     if (open) {

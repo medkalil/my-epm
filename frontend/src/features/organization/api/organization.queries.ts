@@ -7,7 +7,6 @@ import type {
   Organization,
   OrganizationMember,
 } from '../types/organization.types';
-import type { Page } from '@/types/api';
 import { useOrgStore } from '@/stores/orgStore';
 import { App } from 'antd';
 import { getApiErrorMessage } from '@/lib/axios';
@@ -17,16 +16,16 @@ export function useMyOrganizations() {
   const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
 
-  const query = useQuery<Page<Organization>>({
+  const query = useQuery<Organization[]>({
     queryKey: ['organizations', 'mine'],
     queryFn: () => organizationService.getMine(),
   });
 
   useEffect(() => {
     if (query.data) {
-      setOrganizations(query.data.content);
-      if (!activeOrganization && query.data.content.length > 0) {
-        setActiveOrganization(query.data.content[0] ?? null);
+      setOrganizations(query.data);
+      if (!activeOrganization && query.data.length > 0) {
+        setActiveOrganization(query.data[0] ?? null);
       }
     }
   }, [query.data, setOrganizations, setActiveOrganization, activeOrganization]);
@@ -35,7 +34,7 @@ export function useMyOrganizations() {
 }
 
 export function useOrganizationMembers(orgId: number | undefined) {
-  return useQuery<Page<OrganizationMember>>({
+  return useQuery<OrganizationMember[]>({
     queryKey: ['organizations', orgId, 'members'],
     queryFn: () => organizationService.listMembers(orgId!),
     enabled: !!orgId,
@@ -45,12 +44,12 @@ export function useOrganizationMembers(orgId: number | undefined) {
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
   const { message } = App.useApp();
-  const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
+  const addOrganization = useOrgStore((state) => state.addOrganization);
 
   return useMutation({
     mutationFn: (payload: CreateOrganizationRequest) => organizationService.create(payload),
     onSuccess: (org) => {
-      setActiveOrganization(org);
+      addOrganization(org);
       void queryClient.invalidateQueries({ queryKey: ['organizations', 'mine'] });
       message.success(`Organization "${org.name}" created successfully`);
     },

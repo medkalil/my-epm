@@ -14,7 +14,7 @@ export default function OrgTeamPage() {
 
   const { data, isLoading } = useOrganizationMembers(orgId);
 
-  const members = data?.content ?? [];
+  const members = data ?? [];
 
   return (
     <div>

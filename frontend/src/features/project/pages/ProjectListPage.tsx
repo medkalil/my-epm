@@ -26,7 +26,7 @@ export default function ProjectListPage() {
 
   if (isLoading) return <LoadingSpinner />;
 
-  const projects = data?.content ?? [];
+  const projects = data ?? [];
 
   return (
     <div>

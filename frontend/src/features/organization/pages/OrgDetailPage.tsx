@@ -46,7 +46,7 @@ export default function OrgDetailPage() {
       <Typography.Title level={4} style={{ marginTop: 24 }}>
         Members
       </Typography.Title>
-      <MemberTable members={membersQuery.data?.content ?? []} loading={membersQuery.isLoading} />
+      <MemberTable members={membersQuery.data ?? []} loading={membersQuery.isLoading} />
     </div>
   );
 }

@@ -12,7 +12,7 @@ export function useOrganizationOverview() {
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
 
-  const myOrgsQuery = useQuery<Page<Organization>>({
+  const myOrgsQuery = useQuery<Organization[]>({
     queryKey: ['organizations', 'mine'],
     queryFn: () => organizationService.getMine(),
   });
@@ -25,9 +25,9 @@ export function useOrganizationOverview() {
 
   useEffect(() => {
     if (myOrgsQuery.data) {
-      setOrganizations(myOrgsQuery.data.content);
-      if (!activeOrganization && myOrgsQuery.data.content.length > 0) {
-        setActiveOrganization(myOrgsQuery.data.content[0] ?? null);
+      setOrganizations(myOrgsQuery.data);
+      if (!activeOrganization && myOrgsQuery.data.length > 0) {
+        setActiveOrganization(myOrgsQuery.data[0] ?? null);
       }
     }
   }, [myOrgsQuery.data, setOrganizations, setActiveOrganization, activeOrganization]);

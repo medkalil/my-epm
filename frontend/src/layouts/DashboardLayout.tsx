@@ -1,28 +1,41 @@
+import { useState } from 'react';
 import { Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
-import { Sidebar } from '@/layouts/components/Sidebar';
-import { Header } from '@/layouts/components/Header';
-import { Breadcrumb } from '@/layouts/components/Breadcrumb';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { useUiStore } from '@/stores/uiStore';
+import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
+import { useMyOrganizations } from '@/features/organization/api/organization.queries';
+
+const { Content } = Layout;
 
 export function DashboardLayout() {
-  const sidebarCollapsed = useUiStore((state) => state.sidebarCollapsed);
-  const toggleSidebar = useUiStore((state) => state.toggleSidebar);
+  const [collapsed, setCollapsed] = useState(false);
+  const [orgSwitchOpen, setOrgSwitchOpen] = useState(false);
+
+  // Sync user's organizations in the background
+  useMyOrganizations();
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sidebar collapsed={sidebarCollapsed} />
+    <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
+      <Sidebar
+        collapsed={collapsed}
+        onOpenOrgSwitch={() => setOrgSwitchOpen(true)}
+      />
       <Layout>
-        <Layout.Header style={{ padding: 0, position: 'sticky', top: 0, zIndex: 100 }}>
-          <Header collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
-        </Layout.Header>
-        <Breadcrumb />
-        <Layout.Content style={{ padding: '16px 24px' }}>
-          <ErrorBoundary>
-            <Outlet />
-          </ErrorBoundary>
-        </Layout.Content>
+        <Header
+          collapsed={collapsed}
+          onToggle={() => setCollapsed(!collapsed)}
+          orgSwitchOpen={orgSwitchOpen}
+          onCloseOrgSwitch={() => setOrgSwitchOpen(false)}
+        />
+        <Content
+          style={{
+            padding: '24px 32px',
+            background: '#f8fafc',
+            minHeight: 'calc(100vh - 60px)',
+          }}
+        >
+          <Outlet />
+        </Content>
       </Layout>
     </Layout>
   );

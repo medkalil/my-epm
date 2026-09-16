@@ -1,7 +1,6 @@
 import { api } from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/constants';
 import type { Task, CreateTaskRequest, UpdateTaskRequest } from '@/features/task/types/task.types';
-import type { Page, PageParams } from '@/types/api';
 
 export const taskService = {
   async create(payload: CreateTaskRequest): Promise<Task> {
@@ -16,33 +15,26 @@ export const taskService = {
     return data;
   },
 
-  async getByProject(
-    projectId: number,
-    orgId: number,
-    params?: PageParams,
-  ): Promise<Page<Task>> {
-    const { data } = await api.get<Page<Task>>(
+  async getByProject(projectId: number, orgId: number): Promise<Task[]> {
+    const { data } = await api.get<Task[]>(
       API_ENDPOINTS.tasks.byProject(projectId),
-      { params: { ...params, orgId } },
+      { params: { orgId } },
     );
     return data;
   },
 
-  async getByOrganization(
-    orgId: number,
-    params?: PageParams,
-  ): Promise<Page<Task>> {
-    const { data } = await api.get<Page<Task>>(
+  async getByOrganization(orgId: number): Promise<Task[]> {
+    const { data } = await api.get<Task[]>(
       API_ENDPOINTS.tasks.byOrganization(orgId),
-      { params },
     );
     return data;
   },
 
-  async getByUser(userId: number, orgId: number, params?: PageParams): Promise<Page<Task>> {
-    const { data } = await api.get<Page<Task>>(API_ENDPOINTS.tasks.byUser(userId), {
-      params: { ...params, orgId },
-    });
+  async getByUser(userId: number, orgId: number): Promise<Task[]> {
+    const { data } = await api.get<Task[]>(
+      API_ENDPOINTS.tasks.byUser(userId),
+      { params: { orgId } },
+    );
     return data;
   },
 

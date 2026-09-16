@@ -16,7 +16,7 @@ export default function OrgListPage() {
 
   if (isLoading) return <LoadingSpinner />;
 
-  const organizations = data?.content ?? [];
+  const organizations = data ?? [];
 
   return (
     <div>

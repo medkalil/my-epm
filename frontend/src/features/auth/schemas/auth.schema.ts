@@ -1,9 +1,11 @@
 import { z } from 'zod';
-import { emailSchema, nameSchema, passwordSchema } from '@/lib/zod';
+import { nameSchema, passwordSchema } from '@/lib/zod';
 
 export const loginSchema = z.object({
   username: nameSchema,
   password: passwordSchema,
+  rememberSession: z.boolean().optional(),
+  workspaceSlug: z.string().optional(),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
@@ -11,9 +13,14 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export const registerSchema = z
   .object({
     username: nameSchema,
-    email: emailSchema.optional().or(z.literal('')),
     password: passwordSchema,
     confirmPassword: z.string().min(1, 'Please confirm your password'),
+    fullName: z.string().optional(),
+    workEmail: z
+      .string()
+      .email('Invalid work email address')
+      .optional()
+      .or(z.literal('')),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'],
