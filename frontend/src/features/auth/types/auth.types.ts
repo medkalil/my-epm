@@ -10,6 +10,10 @@ export interface RegisterRequest {
   email: string;
   fullName: string;
   password: string;
+  organization?: {
+    name: string;
+    slug: string;
+  };
 }
 
 export interface AuthTokens {

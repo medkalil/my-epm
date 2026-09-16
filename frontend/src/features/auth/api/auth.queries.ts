@@ -49,12 +49,13 @@ export function useRegisterMutation() {
 
   return useMutation({
     mutationFn: async (payload: RegisterRequest) => {
-      // 1. Register with backend
+      // 1. Register account + provision organization atomically on the backend
       await authService.register({
         username: payload.username,
         email: payload.email,
         fullName: payload.fullName,
         password: payload.password,
+        organization: payload.organization,
       });
 
       // 2. Auto-authenticate to obtain JWT session
@@ -72,10 +73,12 @@ export function useRegisterMutation() {
         username: data.username,
         email: data.email,
       });
-      setOrganizations(data.organizations ?? []);
-      setActiveOrganization(null);
-      // Navigate to guided organization creation
-      navigate(ROUTES.organizations.create, { replace: true });
+      const orgs = data.organizations ?? [];
+      setOrganizations(orgs);
+      const active =
+        orgs.find((o) => o.id === data.currentOrganizationId) || orgs[0];
+      setActiveOrganization(active ?? null);
+      navigate(ROUTES.dashboard, { replace: true });
     },
   });
 }

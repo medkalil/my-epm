@@ -8,10 +8,11 @@ import {
   Card,
   Typography,
   Space,
-  Segmented,
+  Steps,
   Checkbox,
   Tag,
   App,
+  Divider,
 } from 'antd';
 import {
   UserOutlined,
@@ -19,11 +20,17 @@ import {
   MailOutlined,
   CheckCircleFilled,
   RightOutlined,
+  LeftOutlined,
   ApartmentOutlined,
-  TeamOutlined,
+  GlobalOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-import { registerSchema, type RegisterFormValues } from '../schemas/auth.schema';
+import {
+  registerSchema,
+  registerStep1Fields,
+  type RegisterFormValues,
+} from '../schemas/auth.schema';
 import { useRegisterMutation } from '../api/auth.queries';
 import { getApiErrorMessage } from '@/lib/axios';
 import { ROUTES } from '@/routes/paths';
@@ -33,11 +40,13 @@ const { Title, Text } = Typography;
 export function RegisterForm() {
   const { message } = App.useApp();
   const registerMutation = useRegisterMutation();
-  const [onboardingMode, setOnboardingMode] = useState<string>('create');
+  const [current, setCurrent] = useState(0);
 
   const {
     control,
     handleSubmit,
+    setValue,
+    trigger,
     watch,
     formState: { errors },
   } = useForm<RegisterFormValues>({
@@ -48,11 +57,14 @@ export function RegisterForm() {
       workEmail: '',
       password: '',
       confirmPassword: '',
+      organizationName: '',
+      organizationSlug: '',
     },
   });
 
   const password = watch('password') || '';
   const username = watch('username') || '';
+  const organizationName = watch('organizationName') || '';
 
   const has8Chars = password.length >= 8;
   const hasUppercase = /[A-Z]/.test(password);
@@ -61,6 +73,22 @@ export function RegisterForm() {
   const passwordStrengthScore =
     [has8Chars, hasUppercase, hasNumber, hasSymbol].filter(Boolean).length;
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setValue('organizationName', val);
+    const generatedSlug = val
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    setValue('organizationSlug', generatedSlug, { shouldValidate: true });
+  };
+
+  const handleNext = async () => {
+    const valid = await trigger([...registerStep1Fields]);
+    if (valid) setCurrent(1);
+  };
+
   const onSubmit = async (values: RegisterFormValues) => {
     try {
       await registerMutation.mutateAsync({
@@ -68,6 +96,10 @@ export function RegisterForm() {
         email: values.workEmail,
         fullName: values.fullName,
         password: values.password,
+        organization: {
+          name: values.organizationName,
+          slug: values.organizationSlug,
+        },
       });
       message.success('Account registered successfully! Welcome to MY-EPM.');
     } catch (error) {
@@ -79,7 +111,7 @@ export function RegisterForm() {
     <Card
       style={{
         width: '100%',
-        maxWidth: 520,
+        maxWidth: 560,
         borderRadius: 16,
         boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.08)',
         border: '1px solid #e2e8f0',
@@ -96,34 +128,23 @@ export function RegisterForm() {
         <Title level={3} style={{ margin: 0, color: '#0f172a', fontWeight: 700 }}>
           Get started with MY-EPM
         </Title>
+
+        <Steps
+          current={current}
+          size="small"
+          items={[
+            { title: 'Account Details' },
+            { title: 'Organization' },
+          ]}
+          style={{ marginTop: 16 }}
+        />
       </div>
 
-      {/* Mode Selector */}
-      <Segmented
-        block
-        value={onboardingMode}
-        onChange={(val) => {
-          setOnboardingMode(val as string);
-          if (val === 'join') {
-            message.info("Work In Progress")
-          }
-        }}
-        options={[
-          {
-            label: 'Create New Organization',
-            value: 'create',
-            icon: <ApartmentOutlined />,
-          },
-          {
-            label: 'Join Existing via Slug (Work in Progress)',
-            value: 'join',
-            icon: <TeamOutlined />,
-          },
-        ]}
-        style={{ marginBottom: 20, padding: 4 }}
-      />
-
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      <Form
+        layout="vertical"
+        onFinish={handleSubmit(onSubmit)}
+        style={current === 0 ? undefined : { display: 'none' }}
+      >
         {/* Full Name & Work Email in responsive row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <Form.Item
@@ -297,16 +318,144 @@ export function RegisterForm() {
 
         <Button
           type="primary"
-          htmlType="submit"
           size="large"
           block
           icon={<RightOutlined />}
           iconPosition="end"
-          loading={registerMutation.isPending}
+          onClick={handleNext}
           style={{ height: 44, fontWeight: 600, borderRadius: 8 }}
         >
-          Create Your Organization
+          Continue — Set Up Organization
         </Button>
+      </Form>
+
+      <Form
+        layout="vertical"
+        onFinish={handleSubmit(onSubmit)}
+        style={current === 1 ? undefined : { display: 'none' }}
+      >
+        <div style={{ marginBottom: 8 }}>
+          <Space align="center" size={8}>
+            <ApartmentOutlined style={{ color: '#1677FF', fontSize: 18 }} />
+            <Text strong style={{ fontSize: 14 }}>
+              Organization Workspace
+            </Text>
+          </Space>
+          <Text type="secondary" style={{ display: 'block', marginTop: 2, fontSize: 12 }}>
+            Your account is created together with an organization, and you will become its immutable
+            <strong> OWNER</strong>.
+          </Text>
+        </div>
+
+        {/* Organization Name */}
+        <Form.Item
+          label={
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>
+                Organization Name <span style={{ color: '#ef4444' }}>*</span>
+              </span>
+              <Text type="secondary" style={{ fontSize: 11 }}>
+                Displayed across shared tenant portals
+              </Text>
+            </div>
+          }
+          validateStatus={errors.organizationName ? 'error' : ''}
+          help={errors.organizationName?.message}
+          style={{ marginBottom: 16 }}
+        >
+          <Controller
+            control={control}
+            name="organizationName"
+            render={({ field }) => (
+              <Input
+                prefix={<ApartmentOutlined style={{ color: '#94a3b8' }} />}
+                placeholder="e.g. Acme FinTech Corp"
+                {...field}
+                onChange={handleNameChange}
+              />
+            )}
+          />
+        </Form.Item>
+
+        {/* Workspace URL / Slug */}
+        <Form.Item
+          label={
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <span style={{ fontWeight: 600, fontSize: 13 }}>
+                Workspace Slug <span style={{ color: '#ef4444' }}>*</span>
+              </span>
+              {organizationName.length >= 2 && (
+                <Tag color="success" icon={<CheckCircleFilled />}>
+                  Auto-generated
+                </Tag>
+              )}
+            </div>
+          }
+          validateStatus={errors.organizationSlug ? 'error' : ''}
+          help={errors.organizationSlug?.message || 'Routing slug used for your workspace URL (e.g. acme-fintech)'}
+          style={{ marginBottom: 20 }}
+        >
+          <Controller
+            control={control}
+            name="organizationSlug"
+            render={({ field }) => (
+              <Input
+                prefix={<GlobalOutlined style={{ color: '#94a3b8' }} />}
+                addonBefore="my-epm.com/w/"
+                placeholder="acme-fintech"
+                {...field}
+              />
+            )}
+          />
+        </Form.Item>
+
+        {/* Free Plan Full Access Banner */}
+        <div
+          style={{
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            borderRadius: 12,
+            padding: '12px 16px',
+            marginBottom: 20,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Space>
+            <ThunderboltOutlined style={{ color: '#16a34a', fontSize: 16 }} />
+            <Text strong style={{ color: '#14532d', fontSize: 13 }}>
+              Free Plan (Full Access)
+            </Text>
+          </Space>
+          <Tag color="green">ALL FEATURES UNLOCKED</Tag>
+        </div>
+
+        <Divider style={{ margin: '0 0 16px' }} />
+
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <Button
+            size="large"
+            icon={<LeftOutlined />}
+            disabled={registerMutation.isPending}
+            style={{ height: 44, borderRadius: 8 }}
+            onClick={() => setCurrent(0)}
+          >
+            Back
+          </Button>
+          <Button
+            type="primary"
+            htmlType="submit"
+            size="large"
+            block
+            icon={<RightOutlined />}
+            iconPosition="end"
+            loading={registerMutation.isPending}
+            style={{ height: 44, fontWeight: 600, borderRadius: 8 }}
+          >
+            Create Account &amp; Organization
+          </Button>
+        </div>
       </Form>
 
       <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13 }}>

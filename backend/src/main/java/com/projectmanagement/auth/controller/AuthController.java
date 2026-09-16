@@ -6,6 +6,7 @@ import com.projectmanagement.auth.dto.request.RegisterRequest;
 import com.projectmanagement.auth.dto.request.TokenRefreshRequest;
 import com.projectmanagement.auth.dto.response.TokenRefreshResponse;
 import com.projectmanagement.auth.exception.TokenRefreshException;
+import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
 import com.projectmanagement.user.entity.User;
 import com.projectmanagement.auth.entity.RefreshToken;
 import com.projectmanagement.user.repository.UserRepository;
@@ -23,6 +24,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -81,6 +83,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Transactional
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         if (userRepository.findByName(registerRequest.username()).isPresent()) {
             return ResponseEntity
@@ -102,6 +105,14 @@ public class AuthController {
         user.setFullName(registerRequest.fullName());
 
         User savedUser = userRepository.save(user);
+
+        // If onboarding org details are provided, provision the tenant within the same transaction
+        if (registerRequest.organization() != null) {
+            RegisterRequest.OrganizationOnboarding org = registerRequest.organization();
+            organizationService.createOrganization(
+                    new CreateOrganizationRequest(org.name(), org.slug()),
+                    savedUser.getName());
+        }
 
         return ResponseEntity.ok(userMapper.toResponse(savedUser));
     }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nameSchema, passwordSchema, emailSchema } from '@/lib/zod';
+import { nameSchema, passwordSchema, emailSchema, slugSchema } from '@/lib/zod';
 
 export const loginSchema = z.object({
   username: z
@@ -21,6 +21,8 @@ export const registerSchema = z
     workEmail: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string().min(1, 'Please confirm your password'),
+    organizationName: nameSchema,
+    organizationSlug: slugSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'],
@@ -28,3 +30,11 @@ export const registerSchema = z
   });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
+
+export const registerStep1Fields = [
+  'fullName',
+  'workEmail',
+  'username',
+  'password',
+  'confirmPassword',
+] as const;

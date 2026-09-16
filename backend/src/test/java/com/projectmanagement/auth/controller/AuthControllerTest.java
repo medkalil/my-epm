@@ -9,6 +9,7 @@ import com.projectmanagement.auth.exception.TokenRefreshException;
 import com.projectmanagement.auth.security.JwtUtils;
 import com.projectmanagement.auth.service.RefreshTokenService;
 import com.projectmanagement.common.exception.GlobalExceptionHandler;
+import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
 import com.projectmanagement.organization.dto.response.OrganizationResponse;
 import com.projectmanagement.organization.service.OrganizationService;
 import com.projectmanagement.user.dto.response.UserResponse;
@@ -78,7 +79,7 @@ class AuthControllerTest {
 
     @Test
     void register_success() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123");
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null);
         User savedUser = new User(1L, "alice", "encodedPassword", "alice@example.com", "Alice Vance");
         UserResponse userResponse = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
 
@@ -99,8 +100,33 @@ class AuthControllerTest {
     }
 
     @Test
+    void register_withOrganization_createsUserAndOrganization() throws Exception {
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123",
+                new RegisterRequest.OrganizationOnboarding("Acme Corp", "acme-corp"));
+        User savedUser = new User(1L, "alice", "encodedPassword", "alice@example.com", "Alice Vance");
+        UserResponse userResponse = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
+
+        when(userRepository.findByName("alice")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.empty());
+        when(encoder.encode("password123")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(userMapper.toResponse(savedUser)).thenReturn(userResponse);
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("alice"));
+
+        org.mockito.Mockito.verify(organizationService).createOrganization(
+                new CreateOrganizationRequest("Acme Corp", "acme-corp"),
+                "alice");
+    }
+
+    @Test
     void register_usernameAlreadyTaken_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123");
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null);
         User existing = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
 
         when(userRepository.findByName("alice")).thenReturn(Optional.of(existing));
@@ -114,7 +140,7 @@ class AuthControllerTest {
 
     @Test
     void register_emailAlreadyTaken_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice2", "alice@example.com", "Alice Vance 2", "password123");
+        RegisterRequest request = new RegisterRequest("alice2", "alice@example.com", "Alice Vance 2", "password123", null);
         User existing = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
 
         when(userRepository.findByName("alice2")).thenReturn(Optional.empty());
@@ -129,7 +155,7 @@ class AuthControllerTest {
 
     @Test
     void register_validationFailure_blankFields_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "", "", "");
+        RegisterRequest request = new RegisterRequest("", "", "", "", null);
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
