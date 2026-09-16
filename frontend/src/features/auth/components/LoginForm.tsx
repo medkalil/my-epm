@@ -17,9 +17,6 @@ import {
   LockOutlined,
   BankOutlined,
   LoginOutlined,
-  GoogleOutlined,
-  SafetyCertificateOutlined,
-  GlobalOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { loginSchema, type LoginFormValues } from '../schemas/auth.schema';
@@ -42,7 +39,6 @@ export function LoginForm() {
     defaultValues: {
       username: '',
       password: '',
-      workspaceSlug: '',
       rememberSession: true,
     },
   });
@@ -83,26 +79,6 @@ export function LoginForm() {
       </div>
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-        {/* Organization Workspace (Optional discovery) */}
-        <Form.Item
-          label={<span style={{ fontWeight: 600, fontSize: 13 }}>Organization Workspace (Optional)</span>}
-          help="Leave blank to auto-discover your organization workspace via credentials."
-          style={{ marginBottom: 16 }}
-        >
-          <Controller
-            control={control}
-            name="workspaceSlug"
-            render={({ field }) => (
-              <Input
-                prefix={<BankOutlined style={{ color: '#94a3b8' }} />}
-                placeholder="acme-corp or your-workspace"
-                size="large"
-                {...field}
-              />
-            )}
-          />
-        </Form.Item>
-
         {/* Corporate Email / Username */}
         <Form.Item
           label={<span style={{ fontWeight: 600, fontSize: 13 }}>Corporate Email / Username</span>}
@@ -130,7 +106,6 @@ export function LoginForm() {
           label={
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
               <span style={{ fontWeight: 600, fontSize: 13 }}>Password</span>
-              <a style={{ fontSize: 12, color: '#1677FF' }}>Forgot password?</a>
             </div>
           }
           validateStatus={errors.password ? 'error' : ''}
@@ -150,6 +125,9 @@ export function LoginForm() {
               />
             )}
           />
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', padding: '10px' }}>
+              <a style={{ fontSize: 12, color: '#1677FF' }}>Forgot password?</a>
+            </div>
         </Form.Item>
 
         <Form.Item style={{ marginBottom: 20 }}>
@@ -176,17 +154,6 @@ export function LoginForm() {
           Sign In
         </Button>
       </Form>
-
-      {/* Identity Provider Federation */}
-      <Divider style={{ margin: '24px 0 16px', fontSize: 11, color: '#94a3b8' }}>
-        OR FEDERATE WITH IDENTITY PROVIDER
-      </Divider>
-
-      {/* <Space style={{ width: '100%', justifyContent: 'space-between' }} size={8}>
-        <Button icon={<GoogleOutlined />} style={{ flex: 1, fontSize: 12 }}>
-          Google
-        </Button>
-      </Space> */}
 
       <div
         style={{

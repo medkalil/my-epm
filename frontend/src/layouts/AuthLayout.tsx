@@ -53,26 +53,9 @@ export function AuthLayout() {
             <Text strong style={{ fontSize: 15, color: '#0f172a' }}>
               MY-EPM
             </Text>
-            <Tag color="blue" style={{ marginLeft: 6, fontSize: 10, padding: '0 4px' }}>
-              MULTI-TENANT CORE
-            </Tag>
           </div>
         </Link>
 
-        <Tag
-          icon={<LockOutlined />}
-          color="default"
-          style={{
-            background: '#ffffff',
-            border: '1px solid #cbd5e1',
-            borderRadius: 6,
-            padding: '4px 10px',
-            fontSize: 12,
-            color: '#475569',
-          }}
-        >
-          Tenant-Isolated TLS 1.3
-        </Tag>
       </div>
 
       {/* Main Center Content Grid */}
@@ -251,7 +234,7 @@ export function AuthLayout() {
           </Text>
         </Space>
         <Text type="secondary" style={{ fontSize: 12 }}>
-          © {new Date().getFullYear()} MY-EPM Multi-Tenant Core
+          © {new Date().getFullYear()} MY-EPM
         </Text>
       </div>
     </div>

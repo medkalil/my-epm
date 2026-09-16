@@ -144,9 +144,6 @@ export function Sidebar({ collapsed, onOpenOrgSwitch }: SidebarProps) {
             <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'block', lineHeight: 1.2 }}>
               MY-EPM
             </Text>
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              Multi-Tenant Core
-            </Text>
           </div>
         )}
       </div>

@@ -165,9 +165,6 @@ export default function HomePage() {
             <Text strong style={{ fontSize: 16, letterSpacing: -0.5, color: '#0f172a' }}>
               MY-EPM
             </Text>
-            <Tag color="blue" style={{ marginLeft: 8, fontSize: 10, padding: '0 4px' }}>
-              MULTI-TENANT CORE
-            </Tag>
           </div>
         </Space>
 
@@ -177,9 +174,6 @@ export default function HomePage() {
           </a>
           <a href="#architecture" style={{ color: '#475569', fontWeight: 500 }}>
             Architecture
-          </a>
-          <a href="#security" style={{ color: '#475569', fontWeight: 500 }}>
-            Security & SpEL
           </a>
           <a href="#testimonials" style={{ color: '#475569', fontWeight: 500 }}>
             Testimonials
@@ -194,7 +188,7 @@ export default function HomePage() {
           </Link>
           <Link to={ROUTES.register}>
             <Button type="primary" icon={<RocketOutlined />}>
-              Start Free Trial
+              Get Started Free
             </Button>
           </Link>
         </Space>
@@ -259,52 +253,10 @@ export default function HomePage() {
                   borderRadius: 8,
                 }}
               >
-                Start Free Trial (14-Day) <RightOutlined />
-              </Button>
-            </Link>
-            <Link to={ROUTES.login}>
-              <Button
-                size="large"
-                style={{
-                  height: 48,
-                  padding: '0 28px',
-                  fontSize: 15,
-                  fontWeight: 500,
-                  borderRadius: 8,
-                }}
-              >
-                View Product Interactive Demo
+                Get Started Free <RightOutlined />
               </Button>
             </Link>
           </Space>
-
-          {/* Trusted Companies */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 28, marginBottom: 48 }}>
-            <Text
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: 1.2,
-                color: '#94a3b8',
-                textTransform: 'uppercase',
-                display: 'block',
-                marginBottom: 16,
-              }}
-            >
-              Trusted by High-Growth FinTechs, Core Banking & High-Assurance Scale-Ups
-            </Text>
-            <Row justify="center" gutter={[32, 16]}>
-              {['Aaron FinTech', 'NovaPay Core', 'CloudScale Inc', 'LedgerX Engine', 'CyberVault Labs'].map(
-                (brand) => (
-                  <Col key={brand}>
-                    <Text strong style={{ color: '#64748b', fontSize: 14 }}>
-                      ⬡ {brand}
-                    </Text>
-                  </Col>
-                ),
-              )}
-            </Row>
-          </div>
 
           {/* Simulated App Cockpit Mockup */}
           <Card
@@ -337,11 +289,6 @@ export default function HomePage() {
                 <Text strong style={{ marginLeft: 8, fontSize: 12, color: '#334155' }}>
                   Active Workspace: <span style={{ color: '#1677FF' }}>Acme Global Portfolio</span>
                 </Text>
-              </Space>
-              <Space size={16}>
-                <Badge status="success" text="Audit Status: SOC-2 Compliant" />
-                <Badge status="processing" text="Real-time Sync: Active" />
-                <Tag color="blue">Multi-Tenant Core</Tag>
               </Space>
             </div>
 
@@ -644,7 +591,7 @@ export default function HomePage() {
           </Space>
           <div style={{ marginTop: 24 }}>
             <Space size={24} style={{ color: '#94a3b8', fontSize: 12 }}>
-              <span>✓ 14-Day Free Evaluation</span>
+              <span>✓ 100% Free </span>
               <span>✓ No Credit Card Required</span>
               <span>✓ Instant API Access</span>
             </Space>
@@ -690,14 +637,12 @@ export default function HomePage() {
             <Text strong style={{ fontSize: 14 }}>
               MY-EPM
             </Text>
-            <Tag color="blue">SOC-2 Type II</Tag>
-            <Tag color="cyan">ISO 27001</Tag>
           </Space>
 
           <Space size={20}>
             <Badge status="success" text="All Systems Operational" />
             <Text type="secondary" style={{ fontSize: 12 }}>
-              © {new Date().getFullYear()} MY-EPM Multi-Tenant Core Inc. All rights reserved.
+              © {new Date().getFullYear()} MY-EPM Inc. All rights reserved.
             </Text>
           </Space>
         </div>

@@ -96,10 +96,6 @@ export function RegisterForm() {
         <Title level={3} style={{ margin: 0, color: '#0f172a', fontWeight: 700 }}>
           Get started with MY-EPM
         </Title>
-        <Text type="secondary" style={{ fontSize: 13 }}>
-          Create a new organization to start the guided setup, or join your company&apos;s existing
-          workspace.
-        </Text>
       </div>
 
       {/* Mode Selector */}
@@ -109,7 +105,7 @@ export function RegisterForm() {
         onChange={(val) => {
           setOnboardingMode(val as string);
           if (val === 'join') {
-            navigate(`${ROUTES.organizations.create}?mode=join`);
+            message.info("Work In Progress")
           }
         }}
         options={[
@@ -119,24 +115,12 @@ export function RegisterForm() {
             icon: <ApartmentOutlined />,
           },
           {
-            label: 'Join Existing via Slug',
+            label: 'Join Existing via Slug (Work in Progress)',
             value: 'join',
             icon: <TeamOutlined />,
           },
         ]}
         style={{ marginBottom: 20, padding: 4 }}
-      />
-
-      <Alert
-        message={
-          <span style={{ fontSize: 12, color: '#1e40af' }}>
-            <strong>Guided 3-Step Setup Wizard:</strong> Takes less than 2 minutes: define
-            workspace, invite your team, and select project templates.
-          </span>
-        }
-        type="info"
-        showIcon
-        style={{ marginBottom: 20, borderRadius: 8, background: '#eff6ff', border: '1px solid #bfdbfe' }}
       />
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
@@ -303,7 +287,7 @@ export function RegisterForm() {
           loading={registerMutation.isPending}
           style={{ height: 44, fontWeight: 600, borderRadius: 8 }}
         >
-          Start Free Organization Setup (Step 1 of 3)
+          Create Your Organization
         </Button>
       </Form>
 
