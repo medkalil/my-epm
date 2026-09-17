@@ -13,6 +13,8 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 const HomePage = lazy(() => import('@/features/home/pages/HomePage'));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'));
 const ProjectListPage = lazy(() => import('@/features/project/pages/ProjectListPage'));
 const ProjectDetailPage = lazy(() => import('@/features/project/pages/ProjectDetailPage'));
@@ -50,6 +52,22 @@ const routes: RouteObject[] = [
         element: (
           <GuestGuard>
             <RegisterPage />
+          </GuestGuard>
+        ),
+      },
+      {
+        path: ROUTES.forgotPassword,
+        element: (
+          <GuestGuard>
+            <ForgotPasswordPage />
+          </GuestGuard>
+        ),
+      },
+      {
+        path: ROUTES.resetPassword,
+        element: (
+          <GuestGuard>
+            <ResetPasswordPage />
           </GuestGuard>
         ),
       },

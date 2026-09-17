@@ -2,7 +2,6 @@ import { Outlet, Link } from 'react-router-dom';
 import { Space, Typography, Tag, Card, Row, Col, Avatar } from 'antd';
 import {
   ApartmentOutlined,
-  LockOutlined,
   CheckCircleOutlined,
   CloudServerOutlined,
   SafetyCertificateOutlined,

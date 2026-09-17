@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectmanagement.auth.dto.request.LoginRequest;
 import com.projectmanagement.auth.dto.request.RegisterRequest;
 import com.projectmanagement.auth.dto.request.TokenRefreshRequest;
+import com.projectmanagement.auth.dto.request.ForgotPasswordRequest;
+import com.projectmanagement.auth.dto.request.ResetPasswordRequest;
 import com.projectmanagement.auth.entity.RefreshToken;
 import com.projectmanagement.auth.exception.TokenRefreshException;
 import com.projectmanagement.auth.security.JwtUtils;
 import com.projectmanagement.auth.service.RefreshTokenService;
+import com.projectmanagement.auth.service.PasswordResetService;
 import com.projectmanagement.common.exception.GlobalExceptionHandler;
 import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
 import com.projectmanagement.organization.dto.response.OrganizationResponse;
@@ -63,6 +66,9 @@ class AuthControllerTest {
 
     @Mock
     private RefreshTokenService refreshTokenService;
+
+    @Mock
+    private PasswordResetService passwordResetService;
 
     @Mock
     private OrganizationService organizationService;
@@ -261,5 +267,51 @@ class AuthControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.message").value("Failed for [unknown-refresh-token]: Refresh token is not in database!"));
+    }
+
+    @Test
+    void forgotPassword_validRequest_returnsGenericMessage() throws Exception {
+        ForgotPasswordRequest request = new ForgotPasswordRequest("alice@example.com");
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(org.hamcrest.Matchers.containsString("If an account exists")));
+
+        org.mockito.Mockito.verify(passwordResetService).requestPasswordReset("alice@example.com");
+    }
+
+    @Test
+    void forgotPassword_blankIdentifier_returns400() throws Exception {
+        ForgotPasswordRequest request = new ForgotPasswordRequest("");
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void resetPassword_validRequest_returns200() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest("reset-token-123", "newPassword1");
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(org.hamcrest.Matchers.containsString("Password has been reset")));
+
+        org.mockito.Mockito.verify(passwordResetService).resetPassword("reset-token-123", "newPassword1");
+    }
+
+    @Test
+    void resetPassword_blankFields_returns400() throws Exception {
+        ResetPasswordRequest request = new ResetPasswordRequest("", "");
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

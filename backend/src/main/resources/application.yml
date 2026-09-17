@@ -18,8 +18,26 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
+  mail:
+    host: ${MAILTRAP_HOST:sandbox.smtp.mailtrap.io}
+    port: ${MAILTRAP_PORT:2525}
+    username: ${MAILTRAP_USERNAME:31218dcf2ec13e}
+    password: ${MAILTRAP_PASSWORD:17084cec38a047}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+
 epm:
   app:
     jwtSecret: c2VjcmV0S2V5Rm9ySldUVG9rZW5zQW5kVGhpcyBpcyBhIHZlcnkgc3Ryb25nIGFuZCBzZWN1cmUgZm9yIHByb2R1Y3Rpb24=
     jwtExpirationMs: 86400000
     jwtRefreshExpirationMs: 604800000
+    passwordResetExpirationMs: 1800000
+    frontendUrl: http://localhost:5173
+    noReplyEmail: no-reply@my-epm.com

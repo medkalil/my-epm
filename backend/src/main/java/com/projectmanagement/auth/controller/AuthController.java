@@ -4,6 +4,8 @@ import com.projectmanagement.auth.dto.response.JwtResponse;
 import com.projectmanagement.auth.dto.request.LoginRequest;
 import com.projectmanagement.auth.dto.request.RegisterRequest;
 import com.projectmanagement.auth.dto.request.TokenRefreshRequest;
+import com.projectmanagement.auth.dto.request.ForgotPasswordRequest;
+import com.projectmanagement.auth.dto.request.ResetPasswordRequest;
 import com.projectmanagement.auth.dto.response.TokenRefreshResponse;
 import com.projectmanagement.auth.exception.TokenRefreshException;
 import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
@@ -13,6 +15,7 @@ import com.projectmanagement.user.repository.UserRepository;
 import com.projectmanagement.auth.security.JwtUtils;
 import com.projectmanagement.user.mapper.UserMapper;
 import com.projectmanagement.auth.service.RefreshTokenService;
+import com.projectmanagement.auth.service.PasswordResetService;
 import com.projectmanagement.organization.dto.response.OrganizationResponse;
 import com.projectmanagement.organization.service.OrganizationService;
 
@@ -39,6 +42,7 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordResetService passwordResetService;
     private final OrganizationService organizationService;
 
     public AuthController(AuthenticationManager authenticationManager,
@@ -47,6 +51,7 @@ public class AuthController {
                           JwtUtils jwtUtils,
                           UserMapper userMapper,
                           RefreshTokenService refreshTokenService,
+                          PasswordResetService passwordResetService,
                           OrganizationService organizationService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
@@ -54,6 +59,7 @@ public class AuthController {
         this.jwtUtils = jwtUtils;
         this.userMapper = userMapper;
         this.refreshTokenService = refreshTokenService;
+        this.passwordResetService = passwordResetService;
         this.organizationService = organizationService;
     }
 
@@ -130,5 +136,18 @@ public class AuthController {
                 })
                 .orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
                         "Refresh token is not in database!"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+        passwordResetService.requestPasswordReset(forgotPasswordRequest.identifier());
+        return ResponseEntity.ok("If an account exists for this username or email, "
+                + "a password reset link has been sent to its email address.");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        passwordResetService.resetPassword(resetPasswordRequest.token(), resetPasswordRequest.newPassword());
+        return ResponseEntity.ok("Password has been reset successfully. Please sign in with your new password.");
     }
 }

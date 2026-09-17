@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/services/auth.service';
-import type { LoginRequest, RegisterRequest } from '../types/auth.types';
+import type { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth.types';
 import { useAuthStore } from '@/stores/authStore';
 import { useOrgStore } from '@/stores/orgStore';
 import { ROUTES } from '@/routes/paths';
@@ -80,5 +80,17 @@ export function useRegisterMutation() {
       setActiveOrganization(active ?? null);
       navigate(ROUTES.dashboard, { replace: true });
     },
+  });
+}
+
+export function useForgotPasswordMutation() {
+  return useMutation({
+    mutationFn: (payload: ForgotPasswordRequest) => authService.forgotPassword(payload),
+  });
+}
+
+export function useResetPasswordMutation() {
+  return useMutation({
+    mutationFn: (payload: ResetPasswordRequest) => authService.resetPassword(payload),
   });
 }

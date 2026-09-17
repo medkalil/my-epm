@@ -1,6 +1,7 @@
 package com.projectmanagement.common.exception;
 
 import com.projectmanagement.auth.exception.TokenRefreshException;
+import com.projectmanagement.auth.exception.InvalidPasswordResetTokenException;
 import com.projectmanagement.common.dto.ErrorResponse;
 import com.projectmanagement.user.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -102,6 +103,17 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPasswordResetToken(
+            InvalidPasswordResetTokenException ex) {
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(BadCredentialsException.class)

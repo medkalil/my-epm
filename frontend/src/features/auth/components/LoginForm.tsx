@@ -6,16 +6,13 @@ import {
   Input,
   Card,
   Typography,
-  Space,
   Checkbox,
-  Divider,
   Tag,
   App,
 } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
-  BankOutlined,
   LoginOutlined,
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
@@ -126,7 +123,9 @@ export function LoginForm() {
             )}
           />
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', padding: '10px' }}>
-              <a style={{ fontSize: 12, color: '#1677FF' }}>Forgot password?</a>
+              <Link to={ROUTES.forgotPassword} style={{ fontSize: 12, color: '#1677FF' }}>
+                Forgot password?
+              </Link>
             </div>
         </Form.Item>
 

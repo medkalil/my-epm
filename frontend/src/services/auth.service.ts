@@ -6,6 +6,8 @@ import type {
   RegisterRequest,
   RegisterResponse,
   RefreshTokenResponse,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
 } from '@/features/auth/types/auth.types';
 
 export const authService = {
@@ -23,6 +25,16 @@ export const authService = {
     const { data } = await api.post<RefreshTokenResponse>(API_ENDPOINTS.auth.refresh, {
       refreshToken,
     });
+    return data;
+  },
+
+  async forgotPassword(payload: ForgotPasswordRequest): Promise<string> {
+    const { data } = await api.post<string>(API_ENDPOINTS.auth.forgotPassword, payload);
+    return data;
+  },
+
+  async resetPassword(payload: ResetPasswordRequest): Promise<string> {
+    const { data } = await api.post<string>(API_ENDPOINTS.auth.resetPassword, payload);
     return data;
   },
 };
