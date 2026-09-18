@@ -134,12 +134,12 @@ flowchart LR
 
 ### Phase 5: Projects Portfolio Management
 - **Visual Reference:** `frontend/screens/projects.png`
-- **Target Files:** `frontend/src/features/project/pages/ProjectListPage.tsx`, `ProjectDetailPage.tsx`
+- **Target Files:** `frontend/src/features/project/pages/ProjectListPage.tsx`, `CreateProjectModal.tsx`, `AssignProjectMemberModal.tsx`, `ProjectCard.tsx`
 
-- [ ] **5.1 Projects KPI Banner & Toolbar**
-- [ ] **5.2 Projects Data Table & Grid**
-- [ ] **5.3 Create Project & Assign Members Modals**
-- [ ] **5.4 Project Detail View**
+- [x] **5.1 Projects KPI Banner & Toolbar**
+- [x] **5.2 Projects Data Table & Grid**
+- [x] **5.3 Create Project & Assign Members Modals**
+- [x] **5.4 Backend Status Enum & CORS Integration**
 
 ---
 

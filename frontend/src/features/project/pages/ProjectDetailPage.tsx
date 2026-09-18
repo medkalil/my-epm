@@ -44,10 +44,10 @@ export default function ProjectDetailPage() {
             {project.description || '—'}
           </Descriptions.Item>
           <Descriptions.Item label="Created">
-            {new Date(project.createdAt).toLocaleString()}
+            {project.createdAt ? new Date(project.createdAt).toLocaleString() : '—'}
           </Descriptions.Item>
           <Descriptions.Item label="Last updated">
-            {new Date(project.updatedAt).toLocaleString()}
+            {project.updatedAt ? new Date(project.updatedAt).toLocaleString() : '—'}
           </Descriptions.Item>
         </Descriptions>
       </Card>

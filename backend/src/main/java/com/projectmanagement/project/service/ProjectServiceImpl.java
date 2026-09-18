@@ -10,6 +10,7 @@ import com.projectmanagement.project.dto.ProjectUpdateDto;
 import com.projectmanagement.project.exception.ProjectNotFoundException;
 import com.projectmanagement.project.mapper.ProjectMapper;
 import com.projectmanagement.project.model.Project;
+import com.projectmanagement.project.model.ProjectStatus;
 import com.projectmanagement.project.repository.ProjectRepository;
 import com.projectmanagement.user.entity.User;
 import com.projectmanagement.user.exception.UserNotFoundException;
@@ -51,6 +52,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = new Project();
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
+        project.setStatus(dto.getStatus() != null ? dto.getStatus() : ProjectStatus.IN_PROGRESS);
         project.setOrganization(organization);
 
         Set<User> members = new HashSet<>();
@@ -106,6 +108,9 @@ public class ProjectServiceImpl implements ProjectService {
         }
         if (dto.getDescription() != null) {
             project.setDescription(dto.getDescription());
+        }
+        if (dto.getStatus() != null) {
+            project.setStatus(dto.getStatus());
         }
 
         Project saved = projectRepository.save(project);

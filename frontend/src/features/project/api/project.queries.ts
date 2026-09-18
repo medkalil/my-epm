@@ -35,7 +35,7 @@ export function useCreateProject() {
       void queryClient.invalidateQueries({
         queryKey: ['projects', 'org', activeOrganization?.id],
       });
-      message.success('Project created');
+      message.success('Project created successfully');
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });
@@ -50,7 +50,7 @@ export function useUpdateProject(orgId: number) {
       projectService.update(id, orgId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['projects', 'org', orgId] });
-      message.success('Project updated');
+      message.success('Project updated successfully');
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });
@@ -64,7 +64,37 @@ export function useDeleteProject(orgId: number) {
     mutationFn: (id: number) => projectService.remove(id, orgId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['projects', 'org', orgId] });
-      message.success('Project deleted');
+      message.success('Project deleted successfully');
+    },
+    onError: (error) => message.error(getApiErrorMessage(error)),
+  });
+}
+
+export function useAddMemberToProject(orgId: number) {
+  const queryClient = useQueryClient();
+  const { message } = App.useApp();
+
+  return useMutation({
+    mutationFn: ({ projectId, userId }: { projectId: number; userId: number }) =>
+      projectService.addMember(projectId, userId, orgId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['projects', 'org', orgId] });
+      message.success('Member assigned to project');
+    },
+    onError: (error) => message.error(getApiErrorMessage(error)),
+  });
+}
+
+export function useRemoveMemberFromProject(orgId: number) {
+  const queryClient = useQueryClient();
+  const { message } = App.useApp();
+
+  return useMutation({
+    mutationFn: ({ projectId, userId }: { projectId: number; userId: number }) =>
+      projectService.removeMember(projectId, userId, orgId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['projects', 'org', orgId] });
+      message.success('Member removed from project');
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });

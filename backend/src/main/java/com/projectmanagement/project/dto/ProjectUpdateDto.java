@@ -1,5 +1,6 @@
 package com.projectmanagement.project.dto;
 
+import com.projectmanagement.project.model.ProjectStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -11,11 +12,19 @@ public class ProjectUpdateDto {
 
     private String description;
 
+    private ProjectStatus status;
+
     public ProjectUpdateDto() {}
 
     public ProjectUpdateDto(String name, String description) {
         this.name = name;
         this.description = description;
+    }
+
+    public ProjectUpdateDto(String name, String description, ProjectStatus status) {
+        this.name = name;
+        this.description = description;
+        this.status = status;
     }
 
     public String getName() {
@@ -32,5 +41,13 @@ public class ProjectUpdateDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public ProjectStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProjectStatus status) {
+        this.status = status;
     }
 }
