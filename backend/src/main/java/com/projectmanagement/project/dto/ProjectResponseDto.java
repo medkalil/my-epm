@@ -1,5 +1,6 @@
 package com.projectmanagement.project.dto;
 
+import com.projectmanagement.project.model.ProjectStatus;
 import java.util.Set;
 
 public class ProjectResponseDto {
@@ -7,6 +8,7 @@ public class ProjectResponseDto {
     private Long id;
     private String name;
     private String description;
+    private ProjectStatus status;
     private Long organizationId;
     private Set<Long> memberIds;
 
@@ -16,6 +18,16 @@ public class ProjectResponseDto {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.status = ProjectStatus.IN_PROGRESS;
+        this.organizationId = organizationId;
+        this.memberIds = memberIds;
+    }
+
+    public ProjectResponseDto(Long id, String name, String description, ProjectStatus status, Long organizationId, Set<Long> memberIds) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.status = status;
         this.organizationId = organizationId;
         this.memberIds = memberIds;
     }
@@ -42,6 +54,14 @@ public class ProjectResponseDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public ProjectStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProjectStatus status) {
+        this.status = status;
     }
 
     public Long getOrganizationId() {
