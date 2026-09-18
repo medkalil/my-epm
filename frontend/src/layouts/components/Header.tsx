@@ -82,7 +82,9 @@ export function Header({
             <span>&gt;</span>
             <span style={{ color: '#64748b' }}>Console</span>
             <Tag color="processing" style={{ marginLeft: 6, fontSize: 11 }}>
-              ● Multi-Tenant Enterprise Cluster
+              ● {activeOrganization?.slug
+                    ? activeOrganization.slug.charAt(0).toUpperCase() + activeOrganization.slug.slice(1)
+                    : 'Multi-Tenant Enterprise Cluster'}
             </Tag>
           </Space>
         </Space>
