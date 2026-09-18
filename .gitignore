@@ -19,3 +19,5 @@ target/
 *.ipr
 
 old_backend/
+
+plans/
