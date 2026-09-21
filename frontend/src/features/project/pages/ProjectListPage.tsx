@@ -412,7 +412,7 @@ export default function ProjectListPage() {
         subtitle={`${activeOrganization.name} Production Portfolio`}
         actions={
           <Space size={12}>
-            <Button icon={<DownloadOutlined />}>Portfolio Reports</Button>
+            <Button icon={<DownloadOutlined />}>Portfolio Reports</Button>  {/* TODO: Portfolio Reports */}
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -571,7 +571,7 @@ export default function ProjectListPage() {
                   type="secondary"
                   style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}
                 >
-                  Portfolio Velocity
+                  Portfolio Velocity {/* TODO: Portfolio Velocity */}
                 </Typography.Text>
                 <Typography.Title level={3} style={{ margin: '6px 0 2px 0', fontWeight: 700 }}>
                   98.4%
