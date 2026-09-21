@@ -3,7 +3,7 @@ export const ROUTES = {
   dashboard: '/dashboard',
   projects: {
     base: '/projects',
-    detail: (id: string | number) => `/projects/${id}`,
+    detail: (id: string | number) => `/projects/${id}`, // TODO: projects detail
   },
   tasks: {
     base: '/tasks',
