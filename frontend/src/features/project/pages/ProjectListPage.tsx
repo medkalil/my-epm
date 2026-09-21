@@ -126,6 +126,8 @@ export default function ProjectListPage() {
     updateMutation.mutate({
       id: project.id,
       payload: {
+        name: project.name,
+        description: project.description,
         status: newStatus,
       },
     });
