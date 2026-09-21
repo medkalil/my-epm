@@ -10,6 +10,5 @@ public interface OrganizationMemberMapper {
 
     @Mapping(source = "organization.id", target = "organizationId")
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.name", target = "userName")
     OrganizationMemberResponse toResponse(OrganizationMember member);
 }
