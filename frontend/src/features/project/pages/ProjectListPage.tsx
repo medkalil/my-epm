@@ -50,7 +50,9 @@ import type { Project, ProjectStatus } from '../types/project.types';
 
 export default function ProjectListPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [selectedProjectForMembers, setSelectedProjectForMembers] = useState<Project | null>(null);
+  const [selectedProjectIdForMembers, setSelectedProjectIdForMembers] = useState<number | null>(
+    null,
+  );
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [activeStatusTab, setActiveStatusTab] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -121,6 +123,11 @@ export default function ProjectListPage() {
     });
     return userIds.size;
   }, [projects]);
+
+  const selectedProject = useMemo(
+    () => projects.find((p) => p.id === selectedProjectIdForMembers) ?? null,
+    [projects, selectedProjectIdForMembers],
+  );
 
   const handleUpdateStatus = (project: Project, newStatus: ProjectStatus) => {
     updateMutation.mutate({
@@ -304,7 +311,7 @@ export default function ProjectListPage() {
               type="link"
               size="small"
               icon={<UsergroupAddOutlined />}
-              onClick={() => setSelectedProjectForMembers(record)}
+              onClick={() => setSelectedProjectIdForMembers(record.id)}
               style={{ fontSize: 12, padding: '0 4px' }}
             >
               Manage
@@ -353,7 +360,7 @@ export default function ProjectListPage() {
             key: 'manage-members',
             label: 'Manage Contributors',
             icon: <UsergroupAddOutlined />,
-            onClick: () => setSelectedProjectForMembers(record),
+            onClick: () => setSelectedProjectIdForMembers(record.id),
           },
           {
             type: 'divider',
@@ -733,7 +740,7 @@ export default function ProjectListPage() {
               <ProjectCard
                 project={project}
                 orgMembers={orgMembers}
-                onManageMembers={(p) => setSelectedProjectForMembers(p)}
+                onManageMembers={(p) => setSelectedProjectIdForMembers(p.id)}
                 onUpdateStatus={handleUpdateStatus}
                 onDelete={handleDeleteProject}
               />
@@ -747,9 +754,9 @@ export default function ProjectListPage() {
 
       {/* Assign Members Modal */}
       <AssignProjectMemberModal
-        project={selectedProjectForMembers}
-        open={!!selectedProjectForMembers}
-        onClose={() => setSelectedProjectForMembers(null)}
+        project={selectedProject}
+        open={!!selectedProject}
+        onClose={() => setSelectedProjectIdForMembers(null)}
       />
     </div>
   );
