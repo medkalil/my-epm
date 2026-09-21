@@ -5,7 +5,7 @@ This document defines the complete roadmap and implementation checklist for the 
 ---
 
 ## 🗺️ Implementation Architecture & Sequence
-
+ 
 ```mermaid
 flowchart LR
     P1["Phase 1: Public Landing"] --> P2["Phase 2: Auth & Tenant Onboarding Flow"]
