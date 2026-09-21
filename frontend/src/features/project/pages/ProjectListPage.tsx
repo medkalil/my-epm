@@ -497,7 +497,7 @@ export default function ProjectListPage() {
                   Total Tasks Enqueued
                 </Typography.Text>
                 <Typography.Title level={3} style={{ margin: '6px 0 2px 0', fontWeight: 700 }}>
-                  {projects.length * 14}
+                  {projects.length * 14} {/* TODO: Total Tasks Enqueued */}
                 </Typography.Title>
                 <Tag color="purple" style={{ borderRadius: 10, margin: 0, fontSize: 11 }}>
                   94% target met
