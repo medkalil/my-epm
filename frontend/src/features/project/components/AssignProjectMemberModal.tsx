@@ -22,11 +22,9 @@ export function AssignProjectMemberModal({ project, open, onClose }: AssignProje
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!project) return null;
-
   const currentMemberIds = useMemo(() => {
-    return new Set(project.memberIds ?? []);
-  }, [project.memberIds]);
+    return new Set(project?.memberIds ?? []);
+  }, [project?.memberIds]);
 
   const filteredMembers = useMemo(() => {
     if (!searchTerm.trim()) return orgMembers;
@@ -37,6 +35,8 @@ export function AssignProjectMemberModal({ project, open, onClose }: AssignProje
       return username.toLowerCase().includes(term) || email.toLowerCase().includes(term);
     });
   }, [orgMembers, searchTerm]);
+
+  if (!project) return null;
 
   const handleToggleMember = async (userId: number, isCurrentlyMember: boolean) => {
     if (isCurrentlyMember) {
