@@ -100,6 +100,7 @@ export function Sidebar({ collapsed, onOpenOrgSwitch }: SidebarProps) {
       collapsed={collapsed}
       collapsible
       trigger={null}
+      className="app-sider"
       style={{
         background: '#ffffff',
         borderRight: '1px solid #e2e8f0',
