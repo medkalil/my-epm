@@ -15,6 +15,7 @@ import type { OrganizationMember } from '@/features/organization/types/organizat
 interface ProjectCardProps {
   project: Project;
   orgMembers?: OrganizationMember[];
+  progressPercent?: number;
   onManageMembers: (project: Project) => void;
   onUpdateStatus: (project: Project, status: ProjectStatus) => void;
   onDelete: (project: Project) => void;
@@ -47,6 +48,7 @@ const statusConfig: Record<
 export function ProjectCard({
   project,
   orgMembers = [],
+  progressPercent,
   onManageMembers,
   onUpdateStatus,
   onDelete,
@@ -64,8 +66,9 @@ export function ProjectCard({
   });
 
   // Derived progress percentage for visual polish based on status
-  const progressPercent =
-    currentStatus === 'COMPLETED' ? 100 : currentStatus === 'IN_REVIEW' ? 85 : 45;
+  const percent =
+    progressPercent ??
+    (currentStatus === 'COMPLETED' ? 100 : currentStatus === 'IN_REVIEW' ? 85 : 45);
 
   const menuItems: MenuProps['items'] = [
     {
@@ -196,11 +199,11 @@ export function ProjectCard({
             Velocity / Health
           </Typography.Text>
           <Typography.Text strong style={{ fontSize: 12 }}>
-            {progressPercent}%
+            {percent}%
           </Typography.Text>
         </div>
         <Progress
-          percent={progressPercent}
+          percent={percent}
           showInfo={false}
           strokeColor={currentStatus === 'COMPLETED' ? '#52c41a' : '#1890ff'}
           size="small"

@@ -43,6 +43,8 @@ import { CreateProjectModal } from '../components/CreateProjectModal';
 import { AssignProjectMemberModal } from '../components/AssignProjectMemberModal';
 import { useProjects, useUpdateProject, useDeleteProject } from '../api/project.queries';
 import { useOrganizationMembers } from '@/features/organization/api/organization.queries';
+import { useTasksByOrganization } from '@/features/task/api/task.queries';
+import { projectProgressPercent } from '../utils/projectProgress';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useOrgStore } from '@/stores/orgStore';
@@ -63,9 +65,32 @@ export default function ProjectListPage() {
 
   const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
   const { data: orgMembers = [] } = useOrganizationMembers(activeOrganization?.id);
+  const { data: orgTasks = [] } = useTasksByOrganization();
 
   const updateMutation = useUpdateProject(orgId);
   const deleteMutation = useDeleteProject(orgId);
+
+  // Task-based progress per project (avg of 25/50/75/100 scores)
+  const progressByProjectId = useMemo(() => {
+    const map = new Map<number, number>();
+    const byProject = new Map<number, typeof orgTasks>();
+    for (const task of orgTasks) {
+      const list = byProject.get(task.projectId) ?? [];
+      list.push(task);
+      byProject.set(task.projectId, list);
+    }
+    for (const [projectId, tasks] of byProject) {
+      map.set(projectId, projectProgressPercent(tasks));
+    }
+    return map;
+  }, [orgTasks]);
+
+  // Portfolio velocity = average of per-project task progress
+  const portfolioVelocity = useMemo(() => {
+    const percents = projects.map((p) => progressByProjectId.get(p.id) ?? 0);
+    if (percents.length === 0) return 0;
+    return Math.round((percents.reduce((a, b) => a + b, 0) / percents.length) * 10) / 10;
+  }, [projects, progressByProjectId]);
 
   // Filtered projects
   const filteredProjects = useMemo(() => {
@@ -326,7 +351,7 @@ export default function ProjectListPage() {
       width: 180,
       render: (_, record) => {
         const st = record.status || 'IN_PROGRESS';
-        const percent = st === 'COMPLETED' ? 100 : st === 'IN_REVIEW' ? 85 : 45;
+        const percent = progressByProjectId.get(record.id) ?? 0;
         return (
           <div style={{ width: '100%', maxWidth: 140 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
@@ -497,7 +522,7 @@ export default function ProjectListPage() {
                   Total Tasks Enqueued
                 </Typography.Text>
                 <Typography.Title level={3} style={{ margin: '6px 0 2px 0', fontWeight: 700 }}>
-                  {projects.length * 14} {/* TODO: Total Tasks Enqueued */}
+                  {orgTasks.length}
                 </Typography.Title>
                 <Tag color="purple" style={{ borderRadius: 10, margin: 0, fontSize: 11 }}>
                   94% target met
@@ -580,10 +605,10 @@ export default function ProjectListPage() {
                   type="secondary"
                   style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}
                 >
-                  Portfolio Velocity {/* TODO: Portfolio Velocity */}
+                  Portfolio Velocity
                 </Typography.Text>
                 <Typography.Title level={3} style={{ margin: '6px 0 2px 0', fontWeight: 700 }}>
-                  98.4%
+                  {portfolioVelocity}%
                 </Typography.Title>
                 <Tag color="green" style={{ borderRadius: 10, margin: 0, fontSize: 11 }}>
                   +1.2% this sprint
@@ -740,6 +765,7 @@ export default function ProjectListPage() {
               <ProjectCard
                 project={project}
                 orgMembers={orgMembers}
+                progressPercent={progressByProjectId.get(project.id) ?? 0}
                 onManageMembers={(p) => setSelectedProjectIdForMembers(p.id)}
                 onUpdateStatus={handleUpdateStatus}
                 onDelete={handleDeleteProject}
