@@ -19,6 +19,7 @@ import java.util.Map;
 import com.projectmanagement.organization.exception.OrganizationNotFoundException;
 import com.projectmanagement.organization.exception.OrganizationSlugAlreadyExistsException;
 import com.projectmanagement.project.exception.ProjectNotFoundException;
+import com.projectmanagement.project.exception.ProjectNotEditableException;
 import com.projectmanagement.task.exception.TaskNotFoundException;
 
 @RestControllerAdvice
@@ -83,6 +84,16 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ProjectNotEditableException.class)
+    public ResponseEntity<ErrorResponse> handleProjectNotEditableException(ProjectNotEditableException ex) {
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

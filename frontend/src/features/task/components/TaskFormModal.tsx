@@ -1,4 +1,4 @@
-import { Modal, Form, Input, Select } from 'antd';
+import { Modal, Form, Input, Select, App } from 'antd';
 import { useEffect } from 'react';
 import { TaskStatus, TaskPriority } from '@/types/common';
 import { useCreateTask, useUpdateTask } from '../api/task.queries';
@@ -31,6 +31,7 @@ const PRIORITY_OPTIONS = [
 
 export function TaskFormModal({ open, onClose, task, defaultStatus, defaultProjectId }: TaskFormModalProps) {
   const [form] = Form.useForm();
+  const { message } = App.useApp();
   const createMutation = useCreateTask();
   const updateMutation = useUpdateTask();
   const { data: projectsData } = useProjects();
@@ -40,7 +41,17 @@ export function TaskFormModal({ open, onClose, task, defaultStatus, defaultProje
 
   const isEdit = !!task;
 
-  const projectOptions = projectsData?.map((p) => ({ label: p.name, value: p.id })) ?? [];
+  const projectOptions =
+    projectsData?.map((p) => {
+      const locked = p.status === 'IN_REVIEW' || p.status === 'COMPLETED';
+      const statusLabel =
+        p.status === 'IN_REVIEW' ? ' (In Review)' : p.status === 'COMPLETED' ? ' (Completed)' : '';
+      return {
+        label: locked ? `${p.name}${statusLabel}` : p.name,
+        value: p.id,
+        disabled: !isEdit && locked,
+      };
+    }) ?? [];
 
   const assigneeOptions = orgMembers.map((m) => ({
     label: m.user?.name || `User #${m.userId}`,
@@ -72,6 +83,15 @@ export function TaskFormModal({ open, onClose, task, defaultStatus, defaultProje
     if (isEdit) {
       await updateMutation.mutateAsync({ id: task!.id, payload: values });
     } else {
+      const selectedProject = projectsData?.find((p) => p.id === values.projectId);
+      if (selectedProject && selectedProject.status !== 'IN_PROGRESS') {
+        message.warning(
+          selectedProject.status === 'IN_REVIEW'
+            ? `Project "${selectedProject.name}" is in review and cannot accept new tasks`
+            : `Project "${selectedProject.name}" is completed and cannot accept new tasks`,
+        );
+        return;
+      }
       await createMutation.mutateAsync({ ...values, organizationId: activeOrgId });
     }
     onClose();

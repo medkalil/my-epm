@@ -12,6 +12,8 @@ import com.projectmanagement.project.mapper.ProjectMapper;
 import com.projectmanagement.project.model.Project;
 import com.projectmanagement.project.model.ProjectStatus;
 import com.projectmanagement.project.repository.ProjectRepository;
+import com.projectmanagement.task.model.Task;
+import com.projectmanagement.task.repository.TaskRepository;
 import com.projectmanagement.user.entity.User;
 import com.projectmanagement.user.exception.UserNotFoundException;
 import com.projectmanagement.user.repository.UserRepository;
@@ -26,17 +28,20 @@ import java.util.Set;
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final TaskRepository taskRepository;
     private final OrganizationRepository organizationRepository;
     private final OrganizationMemberRepository organizationMemberRepository;
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
 
     public ProjectServiceImpl(ProjectRepository projectRepository,
+                              TaskRepository taskRepository,
                               OrganizationRepository organizationRepository,
                               OrganizationMemberRepository organizationMemberRepository,
                               UserRepository userRepository,
                               ProjectMapper projectMapper) {
         this.projectRepository = projectRepository;
+        this.taskRepository = taskRepository;
         this.organizationRepository = organizationRepository;
         this.organizationMemberRepository = organizationMemberRepository;
         this.userRepository = userRepository;
@@ -110,6 +115,13 @@ public class ProjectServiceImpl implements ProjectService {
             project.setDescription(dto.getDescription());
         }
         if (dto.getStatus() != null) {
+            if (dto.getStatus() == ProjectStatus.COMPLETED && project.getStatus() != ProjectStatus.COMPLETED) { // not already completed
+                List<Task> tasks = taskRepository.findByProject_Id(project.getId());
+                tasks.forEach(t -> t.setStatus("DONE"));
+                if (!tasks.isEmpty()) {
+                    taskRepository.saveAll(tasks);
+                }
+            }
             project.setStatus(dto.getStatus());
         }
 

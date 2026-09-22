@@ -50,6 +50,7 @@ export function useUpdateProject(orgId: number) {
       projectService.update(id, orgId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['projects', 'org', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] });
       message.success('Project updated successfully');
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
