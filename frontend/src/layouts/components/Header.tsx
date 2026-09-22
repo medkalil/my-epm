@@ -8,6 +8,7 @@ import {
   List,
   Typography,
   App,
+  Grid,
 } from 'antd';
 import {
   MenuFoldOutlined,
@@ -42,6 +43,7 @@ export function Header({
 }: HeaderProps) {
   const navigate = useNavigate();
   const { message } = App.useApp();
+  const screens = Grid.useBreakpoint();
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const organizations = useOrgStore((state) => state.organizations);
   const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
@@ -76,27 +78,33 @@ export function Header({
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </div>
           <Space size={8} style={{ fontSize: 13, color: '#475569' }}>
-            <Text strong style={{ color: '#0f172a' }}>
-              {activeOrganization?.name || 'Workspace'}
-            </Text>
-            <span>&gt;</span>
-            <span style={{ color: '#64748b' }}>Console</span>
-            <Tag color="processing" style={{ marginLeft: 6, fontSize: 11 }}>
-              ● {activeOrganization?.slug
-                    ? activeOrganization.slug.charAt(0).toUpperCase() + activeOrganization.slug.slice(1)
-                    : 'Multi-Tenant Enterprise Cluster'}
-            </Tag>
+            {(screens.md ?? true) && (
+              <>
+                <Text strong style={{ color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150, display: 'block' }}>
+                  {activeOrganization?.name || 'Workspace'}
+                </Text>
+                <span style={{ whiteSpace: 'nowrap' }}>&gt;</span>
+                <span style={{ color: '#64748b', whiteSpace: 'nowrap' }}>Console</span>
+                <Tag color="processing" style={{ marginLeft: 6, fontSize: 11, whiteSpace: 'nowrap' }}>
+                  ● {activeOrganization?.slug
+                        ? activeOrganization.slug.charAt(0).toUpperCase() + activeOrganization.slug.slice(1)
+                        : 'Multi-Tenant Enterprise Cluster'}
+                </Tag>
+              </>
+            )}
           </Space>
         </Space>
 
         {/* Center Search Input */}
-        <div style={{ maxWidth: 360, width: '100%', margin: '0 16px' }} className="hidden sm:block">
-          <Input
-            prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="Search tasks, commits, members (⌘K)"
-            style={{ borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}
-          />
-        </div>
+        {(screens.md ?? true) && (
+          <div style={{ maxWidth: 360, width: '100%', margin: '0 16px' }}>
+            <Input
+              prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+              placeholder="Search tasks, commits, members (⌘K)"
+              style={{ borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}
+            />
+          </div>
+        )}
 
         {/* Right Controls */}
         <Space size={14}>
