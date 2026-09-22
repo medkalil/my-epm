@@ -22,3 +22,13 @@ body,
 body {
   background-color: #f8fafc;
 }
+
+.app-sider {
+  overflow: hidden;
+}
+
+.app-sider .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
