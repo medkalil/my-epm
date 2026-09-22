@@ -9,7 +9,7 @@ import { useOrgStore } from '@/stores/orgStore';
 import { StatusTag, PriorityTag } from '@/components/ui/StatusTags';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { Task } from '../types/task.types';
-import { TaskPriority } from '@/types/common';
+import type { TaskPriority } from '@/types/common';
 
 interface TaskTableViewProps {
   tasks: Task[];
