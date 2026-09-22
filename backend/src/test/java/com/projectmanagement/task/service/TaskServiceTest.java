@@ -5,7 +5,9 @@ import com.projectmanagement.organization.exception.OrganizationNotFoundExceptio
 import com.projectmanagement.organization.repository.OrganizationMemberRepository;
 import com.projectmanagement.organization.repository.OrganizationRepository;
 import com.projectmanagement.project.exception.ProjectNotFoundException;
+import com.projectmanagement.project.exception.ProjectNotEditableException;
 import com.projectmanagement.project.model.Project;
+import com.projectmanagement.project.model.ProjectStatus;
 import com.projectmanagement.project.repository.ProjectRepository;
 import com.projectmanagement.task.dto.TaskCreateDto;
 import com.projectmanagement.task.dto.TaskMoveDto;
@@ -131,6 +133,28 @@ class TaskServiceTest {
     }
 
     @Test
+    void createTask_projectInReview_throwsException() {
+        TaskCreateDto dto = new TaskCreateDto("Test Task", "Desc", "TODO", 10L, 1L, 100L);
+        project.setStatus(ProjectStatus.IN_REVIEW);
+
+        when(organizationRepository.findById(1L)).thenReturn(Optional.of(organization));
+        when(projectRepository.findByIdAndOrganization_Id(10L, 1L)).thenReturn(Optional.of(project));
+
+        assertThrows(ProjectNotEditableException.class, () -> taskService.createTask(dto));
+    }
+
+    @Test
+    void createTask_projectCompleted_throwsException() {
+        TaskCreateDto dto = new TaskCreateDto("Test Task", "Desc", "TODO", 10L, 1L, 100L);
+        project.setStatus(ProjectStatus.COMPLETED);
+
+        when(organizationRepository.findById(1L)).thenReturn(Optional.of(organization));
+        when(projectRepository.findByIdAndOrganization_Id(10L, 1L)).thenReturn(Optional.of(project));
+
+        assertThrows(ProjectNotEditableException.class, () -> taskService.createTask(dto));
+    }
+
+    @Test
     void getTaskById_success() {
         when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
         TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "TODO", 10L, 1L, 100L, "john_doe");
@@ -153,6 +177,7 @@ class TaskServiceTest {
     void updateTask_success() {
         when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
         when(taskRepository.save(any(Task.class))).thenReturn(task);
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(task));
 
         TaskResponseDto responseDto = new TaskResponseDto(1000L, "Updated Task", "New Desc", "IN_PROGRESS", 10L, 1L, 100L, "john_doe");
         when(taskMapper.toDto(task)).thenReturn(responseDto);
@@ -165,12 +190,87 @@ class TaskServiceTest {
     }
 
     @Test
+    void updateTask_lastTaskDone_setsProjectToReview() {
+        task.setStatus("IN_PROGRESS");
+        project.setStatus(ProjectStatus.IN_PROGRESS);
+
+        when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.save(any(Task.class))).thenReturn(task);
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(task));
+
+        TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "DONE", 10L, 1L, 100L, "john_doe");
+        when(taskMapper.toDto(any(Task.class))).thenReturn(responseDto);
+
+        taskService.updateTask(1000L, 1L, new TaskUpdateDto(null, null, "DONE", null));
+
+        assertEquals("DONE", task.getStatus());
+        assertEquals(ProjectStatus.IN_REVIEW, project.getStatus());
+        verify(projectRepository).save(project);
+    }
+
+    @Test
+    void updateTask_taskReopenedFromDone_projectBackToInProgress() {
+        task.setStatus("DONE");
+        project.setStatus(ProjectStatus.IN_REVIEW);
+
+        when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.save(any(Task.class))).thenReturn(task);
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(task));
+
+        TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "TODO", 10L, 1L, 100L, "john_doe");
+        when(taskMapper.toDto(any(Task.class))).thenReturn(responseDto);
+
+        taskService.updateTask(1000L, 1L, new TaskUpdateDto(null, null, "TODO", null));
+
+        assertEquals("TODO", task.getStatus());
+        assertEquals(ProjectStatus.IN_PROGRESS, project.getStatus());
+        verify(projectRepository).save(project);
+    }
+
+    @Test
     void deleteTask_success() {
         when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(task));
 
         taskService.deleteTask(1000L, 1L);
 
         verify(taskRepository).delete(task);
+    }
+
+    @Test
+    void deleteTask_remainingTasksAllDone_setsProjectToReview() {
+        Task otherDone = new Task();
+        otherDone.setId(2001L);
+        otherDone.setTitle("Done A");
+        otherDone.setStatus("DONE");
+        otherDone.setProject(project);
+
+        task.setStatus("TODO");
+        project.setStatus(ProjectStatus.IN_PROGRESS);
+
+        when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(otherDone));
+
+        taskService.deleteTask(1000L, 1L);
+
+        verify(taskRepository).delete(task);
+        assertEquals(ProjectStatus.IN_REVIEW, project.getStatus());
+        verify(projectRepository).save(project);
+    }
+
+    @Test
+    void deleteTask_noRemainingTasks_keepsProjectStatus() {
+        task.setStatus("DONE");
+        project.setStatus(ProjectStatus.IN_PROGRESS);
+
+        when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.findByProject_Id(10L)).thenReturn(Collections.emptyList());
+
+        taskService.deleteTask(1000L, 1L);
+
+        verify(taskRepository).delete(task);
+        assertEquals(ProjectStatus.IN_PROGRESS, project.getStatus());
+        verify(projectRepository, never()).save(any());
     }
 
     @Test
@@ -199,6 +299,7 @@ class TaskServiceTest {
         when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
         when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "TODO"))
                 .thenReturn(List.of(otherA, otherB, task));
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(otherA, otherB, task));
 
         TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "TODO", 10L, 1L, 100L, "john_doe");
         when(taskMapper.toDto(any(Task.class))).thenReturn(responseDto);
@@ -233,6 +334,7 @@ class TaskServiceTest {
                 .thenReturn(List.of(todoTask));
         when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "IN_PROGRESS"))
                 .thenReturn(List.of(progressTask));
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(todoTask, progressTask, task));
 
         TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "IN_PROGRESS", 10L, 1L, 100L, "john_doe");
         when(taskMapper.toDto(any(Task.class))).thenReturn(responseDto);
@@ -244,5 +346,47 @@ class TaskServiceTest {
         assertEquals(1, progressTask.getPosition());
         assertEquals(0, todoTask.getPosition());
         verify(taskRepository, times(2)).saveAll(anyList());
+    }
+
+    @Test
+    void moveTask_lastTaskDone_setsProjectToReview() {
+        task.setStatus("TODO");
+        project.setStatus(ProjectStatus.IN_PROGRESS);
+
+        when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "DONE"))
+                .thenReturn(List.of());
+        when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "TODO"))
+                .thenReturn(List.of());
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(task));
+
+        TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "DONE", 10L, 1L, 100L, "john_doe");
+        when(taskMapper.toDto(any(Task.class))).thenReturn(responseDto);
+
+        taskService.moveTask(1000L, 1L, new TaskMoveDto("DONE", 0));
+
+        assertEquals("DONE", task.getStatus());
+        assertEquals(ProjectStatus.IN_REVIEW, project.getStatus());
+        verify(projectRepository).save(project);
+    }
+
+    @Test
+    void moveTask_movedOutOfDone_projectBackToInProgress() {
+        task.setStatus("DONE");
+        project.setStatus(ProjectStatus.IN_REVIEW);
+
+        when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "TODO")).thenReturn(List.of());
+        when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "DONE")).thenReturn(List.of());
+        when(taskRepository.findByProject_Id(10L)).thenReturn(List.of(task));
+
+        TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "TODO", 10L, 1L, 100L, "john_doe");
+        when(taskMapper.toDto(any(Task.class))).thenReturn(responseDto);
+
+        taskService.moveTask(1000L, 1L, new TaskMoveDto("TODO", 0));
+
+        assertEquals("TODO", task.getStatus());
+        assertEquals(ProjectStatus.IN_PROGRESS, project.getStatus());
+        verify(projectRepository).save(project);
     }
 }

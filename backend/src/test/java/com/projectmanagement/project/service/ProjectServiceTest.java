@@ -10,7 +10,10 @@ import com.projectmanagement.project.dto.ProjectUpdateDto;
 import com.projectmanagement.project.exception.ProjectNotFoundException;
 import com.projectmanagement.project.mapper.ProjectMapper;
 import com.projectmanagement.project.model.Project;
+import com.projectmanagement.project.model.ProjectStatus;
 import com.projectmanagement.project.repository.ProjectRepository;
+import com.projectmanagement.task.model.Task;
+import com.projectmanagement.task.repository.TaskRepository;
 import com.projectmanagement.user.entity.User;
 import com.projectmanagement.user.exception.UserNotFoundException;
 import com.projectmanagement.user.repository.UserRepository;
@@ -36,6 +39,9 @@ class ProjectServiceTest {
 
     @Mock
     private ProjectRepository projectRepository;
+
+    @Mock
+    private TaskRepository taskRepository;
 
     @Mock
     private OrganizationRepository organizationRepository;
@@ -141,6 +147,33 @@ class ProjectServiceTest {
 
         assertNotNull(result);
         assertEquals("Updated Name", result.getName());
+    }
+
+    @Test
+    void updateProject_completed_setsAllTasksToDone() {
+        project.setStatus(ProjectStatus.IN_PROGRESS);
+
+        Task t1 = new Task();
+        t1.setId(1L);
+        t1.setStatus("TODO");
+        Task t2 = new Task();
+        t2.setId(2L);
+        t2.setStatus("IN_PROGRESS");
+
+        when(projectRepository.findByIdAndOrganization_Id(100L, 1L)).thenReturn(Optional.of(project));
+        when(taskRepository.findByProject_Id(100L)).thenReturn(List.of(t1, t2));
+        when(projectRepository.save(any(Project.class))).thenReturn(project);
+
+        ProjectResponseDto responseDto = new ProjectResponseDto(100L, "Test Project", "Desc", 1L, Collections.emptySet());
+        when(projectMapper.toDto(project)).thenReturn(responseDto);
+
+        ProjectUpdateDto updateDto = new ProjectUpdateDto("Test Project", null, ProjectStatus.COMPLETED);
+        projectService.updateProject(100L, 1L, updateDto);
+
+        assertEquals("DONE", t1.getStatus());
+        assertEquals("DONE", t2.getStatus());
+        assertEquals(ProjectStatus.COMPLETED, project.getStatus());
+        verify(taskRepository).saveAll(anyList());
     }
 
     @Test

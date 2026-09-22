@@ -63,6 +63,7 @@ export function useUpdateTask() {
         old?.map((t) => (t.id === id ? data : t)),
       );
       void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      void queryClient.invalidateQueries({ queryKey: ['projects'] });
       message.success('Task updated');
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
@@ -83,6 +84,7 @@ export function useMoveTask() {
         old?.map((t) => (t.id === data.id ? data : t)),
       );
       void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      void queryClient.invalidateQueries({ queryKey: ['projects'] });
       message.success(`Moved to ${data.status.replace('_', ' ')}`);
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
@@ -98,6 +100,7 @@ export function useDeleteTask() {
     mutationFn: (id: number) => taskService.remove(id, activeOrganization!.id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      void queryClient.invalidateQueries({ queryKey: ['projects'] });
       message.success('Task deleted');
     },
     onError: (error) => message.error(getApiErrorMessage(error)),

@@ -5,7 +5,9 @@ import com.projectmanagement.organization.exception.OrganizationNotFoundExceptio
 import com.projectmanagement.organization.repository.OrganizationMemberRepository;
 import com.projectmanagement.organization.repository.OrganizationRepository;
 import com.projectmanagement.project.exception.ProjectNotFoundException;
+import com.projectmanagement.project.exception.ProjectNotEditableException;
 import com.projectmanagement.project.model.Project;
+import com.projectmanagement.project.model.ProjectStatus;
 import com.projectmanagement.project.repository.ProjectRepository;
 import com.projectmanagement.task.dto.TaskCreateDto;
 import com.projectmanagement.task.dto.TaskMoveDto;
@@ -57,6 +59,13 @@ public class TaskServiceImpl implements TaskService {
         Project project = projectRepository.findByIdAndOrganization_Id(dto.getProjectId(), dto.getOrganizationId())
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " + dto.getProjectId() + " in organization: " + dto.getOrganizationId()));
 
+        ProjectStatus projectStatus = project.getStatus() != null ? project.getStatus() : ProjectStatus.IN_PROGRESS;
+        if (projectStatus == ProjectStatus.IN_REVIEW || projectStatus == ProjectStatus.COMPLETED) {
+            throw new ProjectNotEditableException(
+                    "Project \"" + project.getName() + "\" is " + projectStatus.name().replace('_', ' ').toLowerCase()
+                            + " and cannot accept new tasks");
+        }
+
         Task task = new Task();
         task.setTitle(dto.getTitle());
         task.setDescription(dto.getDescription());
@@ -76,6 +85,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Task saved = taskRepository.save(task);
+        syncProjectStatusWithTasks(task.getProject());
         return taskMapper.toDto(saved);
     }
 
@@ -148,6 +158,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Task saved = taskRepository.save(task);
+        syncProjectStatusWithTasks(task.getProject());
         return taskMapper.toDto(saved);
     }
 
@@ -236,6 +247,8 @@ public class TaskServiceImpl implements TaskService {
             }
         }
 
+        syncProjectStatusWithTasks(task.getProject());
+
         return taskMapper.toDto(task);
     }
 
@@ -244,6 +257,27 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(Long id, Long orgId) {
         Task task = taskRepository.findByIdAndOrganization_Id(id, orgId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with ID: " + id + " in organization: " + orgId));
+        Project project = task.getProject();
         taskRepository.delete(task);
+        syncProjectStatusWithTasks(project);
+    }
+
+    private void syncProjectStatusWithTasks(Project project) {
+        if (project == null) {
+            return;
+        }
+        List<Task> tasks = taskRepository.findByProject_Id(project.getId());
+        if (tasks.isEmpty()) {
+            return;
+        }
+        boolean allDone = tasks.stream().allMatch(t -> "DONE".equals(t.getStatus()));
+        ProjectStatus projectStatus = project.getStatus() != null ? project.getStatus() : ProjectStatus.IN_PROGRESS;
+        if (allDone && projectStatus != ProjectStatus.IN_REVIEW && projectStatus != ProjectStatus.COMPLETED) {
+            project.setStatus(ProjectStatus.IN_REVIEW);
+            projectRepository.save(project);
+        } else if (!allDone && projectStatus == ProjectStatus.IN_REVIEW) {
+            project.setStatus(ProjectStatus.IN_PROGRESS);
+            projectRepository.save(project);
+        }
     }
 }
