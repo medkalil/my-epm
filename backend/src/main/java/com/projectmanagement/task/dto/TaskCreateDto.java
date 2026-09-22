@@ -14,6 +14,10 @@ public class TaskCreateDto {
 
     private String status; // defaults to "TODO" if not provided
 
+    private String priority; // LOW, MEDIUM, HIGH, URGENT
+
+    private int position;
+
     @NotNull(message = "Project ID is required")
     private Long projectId;
 
@@ -25,9 +29,15 @@ public class TaskCreateDto {
     public TaskCreateDto() {}
 
     public TaskCreateDto(String title, String description, String status, Long projectId, Long organizationId, Long affectedUserId) {
+        this(title, description, status, null, 0, projectId, organizationId, affectedUserId);
+    }
+
+    public TaskCreateDto(String title, String description, String status, String priority, int position, Long projectId, Long organizationId, Long affectedUserId) {
         this.title = title;
         this.description = description;
         this.status = status;
+        this.priority = priority;
+        this.position = position;
         this.projectId = projectId;
         this.organizationId = organizationId;
         this.affectedUserId = affectedUserId;
@@ -55,6 +65,22 @@ public class TaskCreateDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 
     public Long getProjectId() {

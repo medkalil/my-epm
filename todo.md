@@ -147,9 +147,9 @@ flowchart LR
 - **Visual Reference:** `frontend/screens/Tasks.png`
 - **Target Files:** `frontend/src/features/task/pages/TaskListPage.tsx`, `TaskDetailPage.tsx`
 
-- [ ] **6.1 Board Controls & Filtering**
-- [ ] **6.2 Kanban Workflow Lanes**
-- [ ] **6.3 Create / Edit Task Modal**
+- [x] **6.1 Board Controls & Filtering**
+- [x] **6.2 Kanban Workflow Lanes**
+- [x] **6.3 Create / Edit Task Modal**
 
 ---
 

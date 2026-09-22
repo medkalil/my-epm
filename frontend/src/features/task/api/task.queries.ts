@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { taskService } from '@/services/task.service';
-import type { CreateTaskRequest, UpdateTaskRequest } from '../types/task.types';
+import type { CreateTaskRequest, TaskMoveRequest, UpdateTaskRequest } from '../types/task.types';
 import { useOrgStore } from '@/stores/orgStore';
 import { App } from 'antd';
 import { getApiErrorMessage } from '@/lib/axios';
+import type { Task } from '../types/task.types';
 
 export function useTasksByOrganization() {
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
@@ -57,9 +58,32 @@ export function useUpdateTask() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: UpdateTaskRequest }) =>
       taskService.update(id, activeOrganization!.id, payload),
-    onSuccess: () => {
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData<Task[]>(['tasks', 'org', activeOrganization?.id], (old) =>
+        old?.map((t) => (t.id === id ? data : t)),
+      );
       void queryClient.invalidateQueries({ queryKey: ['tasks'] });
       message.success('Task updated');
+    },
+    onError: (error) => message.error(getApiErrorMessage(error)),
+  });
+}
+
+export function useMoveTask() {
+  const queryClient = useQueryClient();
+  const activeOrganization = useOrgStore((state) => state.activeOrganization);
+  const orgId = activeOrganization?.id;
+  const { message } = App.useApp();
+
+  return useMutation({
+    mutationFn: ({ taskId, payload }: { taskId: number; payload: TaskMoveRequest }) =>
+      taskService.move(taskId, orgId!, payload),
+    onSuccess: (data) => {
+      queryClient.setQueryData<Task[]>(['tasks', 'org', orgId], (old) =>
+        old?.map((t) => (t.id === data.id ? data : t)),
+      );
+      void queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      message.success(`Moved to ${data.status.replace('_', ' ')}`);
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });
