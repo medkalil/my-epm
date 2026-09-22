@@ -124,8 +124,8 @@ export default function TaskListPage() {
           value={viewMode}
           onChange={(v) => setViewMode(v as 'list' | 'board')}
           options={[
-            { value: 'board', icon: <ProjectOutlined /> },
-            { value: 'list', icon: <UnorderedListOutlined /> },
+            { value: 'board', label: 'Kanban Board', icon: <ProjectOutlined /> },
+            { value: 'list', label: 'Data Table List', icon: <UnorderedListOutlined /> },
           ]}
         />
       </div>
