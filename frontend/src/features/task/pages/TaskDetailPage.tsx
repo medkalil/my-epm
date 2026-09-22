@@ -15,7 +15,7 @@ import { TaskStatus, TaskPriority } from '@/types/common';
 import { TaskFormModal } from '../components/TaskFormModal';
 
 const STATUS_OPTIONS = [
-  { label: 'To Do', value: TaskStatus.TODO },
+  { label: 'To Do', value: TaskStatus.TODO }, 
   { label: 'In Progress', value: TaskStatus.IN_PROGRESS },
   { label: 'In Review', value: TaskStatus.IN_REVIEW },
   { label: 'Done', value: TaskStatus.DONE },
