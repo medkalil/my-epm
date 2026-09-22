@@ -39,6 +39,9 @@ function applyMove(tasks: Task[], activeId: number, targetStatus: TaskStatus, ta
       .map((t) => ({ ...t }));
 
     if (st === targetStatus) {
+      // - Math.min: so the index will not be pass the max of the lane size
+      // - Math.max so if the targetIndex is negative then will return 0 and will put the task as first task in that lane
+      // - min & max: to validate the index so that will be in this interval : [0, lane.length] because only this values are valid as index 
       lane.splice(Math.max(0, Math.min(targetIndex, lane.length)), 0, {
         ...active,
         status: targetStatus,
@@ -106,39 +109,55 @@ export function TaskBoard({ tasks, onQuickCreate, onEdit, onDelete }: TaskBoardP
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    // what was dragged → active
+    // what it was dropped over → over
+    // active.id: the dropped task
+    // over.id :
+    //  - can be TODO / IN_PROGRESS / DONE (status as string) if dropped over a new lane
+    //  - can be 12 (id) if dropped over another task in the same line 
     const { active, over } = event;
+    
     setActiveTask(null);
+
+    // If I didn't drop over a valid draggable/droppable element, stop here.
     if (!over) return;
 
     const taskId = Number(active.id);
-    const overIsLane = typeof over.id === 'string';
-    const overStatus = overIsLane
+    const isDifferentLine = typeof over.id === 'string';
+    const taskNewStatus = isDifferentLine
       ? (over.id as TaskStatus)
       : ((over.data.current?.status as TaskStatus) ?? TaskStatus.TODO);
 
-    const laneIds = displayTasks
-      .filter((t) => (t.status || TaskStatus.TODO) === overStatus)
+    const laneTasksIds = displayTasks
+      .filter((t) => (t.status || TaskStatus.TODO) === taskNewStatus)
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       .map((t) => t.id);
 
-    const index = overIsLane
-      ? laneIds.length
-      : Math.max(0, laneIds.indexOf(Number(over.id)));
+    const index = isDifferentLine
+      ? laneTasksIds.length
+      : Math.max(0, laneTasksIds.indexOf(Number(over.id)));
 
-    console.log("############ before next")
-    const next = applyMove(displayTasks, taskId, overStatus, index);
-    const temp = next.map((t) => t.id).join() === displayTasks.map((t) => t.id).join()
-    console.log("############ mainly next", temp)
-    if (next.map((t) => t.id).join() === displayTasks.map((t) => t.id).join()) return;
-    console.log("############ after next")
+    const next = applyMove(displayTasks, taskId, taskNewStatus, index);
+    const hasChanged =
+      next.length !== displayTasks.length ||
+      next.some((nextTask, index) => {
+        const currentTask = displayTasks[index];
+
+        return (
+          nextTask.id !== currentTask?.id ||
+          nextTask.status !== currentTask?.status ||
+          nextTask.position !== currentTask?.position
+        );
+      });
+
+    if (!hasChanged) return;
 
     const moved = next.find((t) => t.id === taskId);
     setOptimisticTasks(next);
     moveMutation.mutate({
       taskId,
-      payload: { status: overStatus, position: moved?.position ?? index },
+      payload: { status: taskNewStatus, position: moved?.position ?? index },
     });
-    console.log("############ executed mutation")
   };
 
   return (
