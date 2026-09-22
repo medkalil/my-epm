@@ -1,14 +1,18 @@
 import { useParams } from 'react-router-dom';
-import { Card, Descriptions, Typography, Select, Tag } from 'antd';
+import { Button, Card, Descriptions, Typography, Select, Tag, Space } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useTask, useUpdateTask, useDeleteTask } from '../api/task.queries';
+import { useProjects } from '@/features/project/api/project.queries';
+import { useOrganizationMembers } from '@/features/organization/api/organization.queries';
+import { useOrgStore } from '@/stores/orgStore';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ROUTES } from '@/routes/paths';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusTag, PriorityTag } from '@/components/ui/StatusTags';
 import { TaskStatus, TaskPriority } from '@/types/common';
+import { TaskFormModal } from '../components/TaskFormModal';
 
 const STATUS_OPTIONS = [
   { label: 'To Do', value: TaskStatus.TODO },
@@ -29,13 +33,21 @@ export default function TaskDetailPage() {
   const taskId = Number(id);
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
+  const { data: projectsData = [] } = useProjects();
+  const activeOrganization = useOrgStore((state) => state.activeOrganization);
+  const { data: orgMembers = [] } = useOrganizationMembers(activeOrganization?.id);
 
   const { data: task, isLoading } = useTask(taskId);
 
   if (isLoading) return <LoadingSpinner />;
   if (!task) return null;
+
+  const project = projectsData.find((p) => p.id === task.projectId);
+  const member = orgMembers.find((m) => m.userId === task.affectedUserId);
+  const assigneeName = task.affectedUserName ?? member?.user?.name;
 
   const handleStatusChange = async (status: TaskStatus) => {
     await updateMutation.mutateAsync({ id: taskId, payload: { status } });
@@ -52,11 +64,18 @@ export default function TaskDetailPage() {
         subtitle={
           <span>
             {task.status && <StatusTag status={task.status} />}
-            {task.priority && <span style={{ marginLeft: 8 }}><PriorityTag priority={task.priority} /></span>}
+            {task.priority && (
+              <span style={{ marginLeft: 8 }}>
+                <PriorityTag priority={task.priority} />
+              </span>
+            )}
           </span>
         }
         actions={
-          <Link to={ROUTES.tasks.base}>← Back to tasks</Link>
+          <Space>
+            <Button onClick={() => setEditOpen(true)}>Edit</Button>
+            <Link to={ROUTES.tasks.base}>← Back to tasks</Link>
+          </Space>
         }
       />
 
@@ -84,13 +103,16 @@ export default function TaskDetailPage() {
             />
           </Descriptions.Item>
           <Descriptions.Item label="Project">
-            {task.project ? (
+            {project ? (
               <Link to={ROUTES.projects.detail(task.projectId)}>
-                <Tag color="blue">{task.project.name}</Tag>
+                <Tag color="blue">{project.name}</Tag>
               </Link>
             ) : (
               '—'
             )}
+          </Descriptions.Item>
+          <Descriptions.Item label="Assignee">
+            {assigneeName ?? 'Unassigned'}
           </Descriptions.Item>
           <Descriptions.Item label="Description" span={2}>
             {task.description || 'No description provided'}
@@ -111,6 +133,8 @@ export default function TaskDetailPage() {
       >
         Delete this task
       </Typography.Text>
+
+      <TaskFormModal open={editOpen} onClose={() => setEditOpen(false)} task={task} />
 
       <ConfirmDialog
         open={confirmOpen}

@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
   tasks: {
     base: '/tasks',
     byId: (id: number) => `/tasks/${id}`,
+    move: (id: number) => `/tasks/${id}/move`,
     byProject: (projectId: number) => `/tasks/project/${projectId}`,
     byOrganization: (orgId: number) => `/tasks/organization/${orgId}`,
     byUser: (userId: number) => `/tasks/user/${userId}`,

@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByOrganization_Id(Long organizationId);
+    List<Task> findByOrganization_IdOrderByPositionAsc(Long organizationId);
+    List<Task> findByOrganization_IdAndStatusOrderByPositionAsc(Long organizationId, String status);
     List<Task> findByProject_Id(Long projectId);
     List<Task> findByProject_IdAndOrganization_Id(Long projectId, Long organizationId);
     List<Task> findByAffectedUser_IdAndOrganization_Id(Long userId, Long organizationId);

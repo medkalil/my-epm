@@ -1,6 +1,7 @@
 package com.projectmanagement.task.service;
 
 import com.projectmanagement.task.dto.TaskCreateDto;
+import com.projectmanagement.task.dto.TaskMoveDto;
 import com.projectmanagement.task.dto.TaskResponseDto;
 import com.projectmanagement.task.dto.TaskUpdateDto;
 
@@ -14,5 +15,6 @@ public interface TaskService {
     List<TaskResponseDto> getTasksByOrganization(Long orgId);
     List<TaskResponseDto> getTasksByAffectedUser(Long userId, Long orgId);
     TaskResponseDto updateTask(Long id, Long orgId, TaskUpdateDto dto);
+    TaskResponseDto moveTask(Long id, Long orgId, TaskMoveDto dto);
     void deleteTask(Long id, Long orgId);
 }

@@ -8,6 +8,7 @@ import com.projectmanagement.project.exception.ProjectNotFoundException;
 import com.projectmanagement.project.model.Project;
 import com.projectmanagement.project.repository.ProjectRepository;
 import com.projectmanagement.task.dto.TaskCreateDto;
+import com.projectmanagement.task.dto.TaskMoveDto;
 import com.projectmanagement.task.dto.TaskResponseDto;
 import com.projectmanagement.task.dto.TaskUpdateDto;
 import com.projectmanagement.task.exception.TaskNotFoundException;
@@ -30,6 +31,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -169,5 +171,78 @@ class TaskServiceTest {
         taskService.deleteTask(1000L, 1L);
 
         verify(taskRepository).delete(task);
+    }
+
+    @Test
+    void moveTask_notFound_throwsException() {
+        when(taskRepository.findByIdAndOrganization_Id(9999L, 1L)).thenReturn(Optional.empty());
+
+        assertThrows(TaskNotFoundException.class, () -> taskService.moveTask(9999L, 1L, new TaskMoveDto("TODO", 0)));
+    }
+
+    @Test
+    void moveTask_withinSameLane_reordersAndRenumbers() {
+        Task otherA = new Task();
+        otherA.setId(2001L);
+        otherA.setTitle("A");
+        otherA.setStatus("TODO");
+        otherA.setPosition(0);
+        Task otherB = new Task();
+        otherB.setId(2002L);
+        otherB.setTitle("B");
+        otherB.setStatus("TODO");
+        otherB.setPosition(1);
+
+        task.setStatus("TODO");
+        task.setPosition(2);
+
+        when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "TODO"))
+                .thenReturn(List.of(otherA, otherB, task));
+
+        TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "TODO", 10L, 1L, 100L, "john_doe");
+        when(taskMapper.toDto(any(Task.class))).thenReturn(responseDto);
+
+        taskService.moveTask(1000L, 1L, new TaskMoveDto("TODO", 0));
+
+        assertEquals("TODO", task.getStatus());
+        assertEquals(0, task.getPosition());
+        assertEquals(1, otherA.getPosition());
+        assertEquals(2, otherB.getPosition());
+        verify(taskRepository, times(1)).saveAll(anyList());
+    }
+
+    @Test
+    void moveTask_crossLane_renumbersBothLanes() {
+        Task todoTask = new Task();
+        todoTask.setId(2001L);
+        todoTask.setTitle("TODO A");
+        todoTask.setStatus("TODO");
+        todoTask.setPosition(0);
+        Task progressTask = new Task();
+        progressTask.setId(2002L);
+        progressTask.setTitle("PROGRESS A");
+        progressTask.setStatus("IN_PROGRESS");
+        progressTask.setPosition(0);
+
+        task.setStatus("TODO");
+        task.setPosition(1);
+
+        when(taskRepository.findByIdAndOrganization_Id(1000L, 1L)).thenReturn(Optional.of(task));
+        when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "TODO"))
+                .thenReturn(List.of(todoTask));
+        when(taskRepository.findByOrganization_IdAndStatusOrderByPositionAsc(1L, "IN_PROGRESS"))
+                .thenReturn(List.of(progressTask));
+
+        TaskResponseDto responseDto = new TaskResponseDto(1000L, "Test Task", "Desc", "IN_PROGRESS", 10L, 1L, 100L, "john_doe");
+        when(taskMapper.toDto(any(Task.class))).thenReturn(responseDto);
+
+        taskService.moveTask(1000L, 1L, new TaskMoveDto("IN_PROGRESS", 0));
+
+        assertEquals("IN_PROGRESS", task.getStatus());
+        assertEquals(0, task.getPosition());
+        assertEquals(1, progressTask.getPosition());
+        assertEquals(0, todoTask.getPosition());
+        verify(taskRepository, times(2)).saveAll(anyList());
     }
 }

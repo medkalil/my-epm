@@ -1,6 +1,6 @@
 import { api } from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/constants';
-import type { Task, CreateTaskRequest, UpdateTaskRequest } from '@/features/task/types/task.types';
+import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskMoveRequest } from '@/features/task/types/task.types';
 
 export const taskService = {
   async create(payload: CreateTaskRequest): Promise<Task> {
@@ -44,6 +44,13 @@ export const taskService = {
     payload: UpdateTaskRequest,
   ): Promise<Task> {
     const { data } = await api.put<Task>(API_ENDPOINTS.tasks.byId(id), payload, {
+      params: { orgId },
+    });
+    return data;
+  },
+
+  async move(id: number, orgId: number, payload: TaskMoveRequest): Promise<Task> {
+    const { data } = await api.put<Task>(API_ENDPOINTS.tasks.move(id), payload, {
       params: { orgId },
     });
     return data;

@@ -1,6 +1,7 @@
 package com.projectmanagement.task.controller;
 
 import com.projectmanagement.task.dto.TaskCreateDto;
+import com.projectmanagement.task.dto.TaskMoveDto;
 import com.projectmanagement.task.dto.TaskResponseDto;
 import com.projectmanagement.task.dto.TaskUpdateDto;
 import com.projectmanagement.task.service.TaskService;
@@ -73,6 +74,16 @@ public class TaskController {
             @P("orgId") @RequestParam("orgId") Long orgId,
             @P("dto") @Valid @RequestBody TaskUpdateDto dto) {
         TaskResponseDto response = taskService.updateTask(id, orgId, dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/move")
+    @PreAuthorize("@orgSecurity.isMember(#orgId)")
+    public ResponseEntity<TaskResponseDto> moveTask(
+            @P("id") @PathVariable("id") Long id,
+            @P("orgId") @RequestParam("orgId") Long orgId,
+            @P("dto") @Valid @RequestBody TaskMoveDto dto) {
+        TaskResponseDto response = taskService.moveTask(id, orgId, dto);
         return ResponseEntity.ok(response);
     }
 

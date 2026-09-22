@@ -12,6 +12,9 @@ public class TaskUpdateDto {
     @Size(max = 50, message = "Status must not exceed 50 characters")
     private String status;
 
+    @Size(max = 20, message = "Priority must not exceed 20 characters")
+    private String priority;
+
     private Long affectedUserId;
 
     public TaskUpdateDto() {}
@@ -20,6 +23,15 @@ public class TaskUpdateDto {
         this.title = title;
         this.description = description;
         this.status = status;
+        this.priority = null;
+        this.affectedUserId = affectedUserId;
+    }
+
+    public TaskUpdateDto(String title, String description, String status, String priority, Long affectedUserId) {
+        this.title = title;
+        this.description = description;
+        this.status = status;
+        this.priority = priority;
         this.affectedUserId = affectedUserId;
     }
 
@@ -45,6 +57,14 @@ public class TaskUpdateDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
     }
 
     public Long getAffectedUserId() {

@@ -8,6 +8,7 @@ import com.projectmanagement.project.exception.ProjectNotFoundException;
 import com.projectmanagement.project.model.Project;
 import com.projectmanagement.project.repository.ProjectRepository;
 import com.projectmanagement.task.dto.TaskCreateDto;
+import com.projectmanagement.task.dto.TaskMoveDto;
 import com.projectmanagement.task.dto.TaskResponseDto;
 import com.projectmanagement.task.dto.TaskUpdateDto;
 import com.projectmanagement.task.exception.TaskNotFoundException;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -59,6 +61,8 @@ public class TaskServiceImpl implements TaskService {
         task.setTitle(dto.getTitle());
         task.setDescription(dto.getDescription());
         task.setStatus(dto.getStatus() != null && !dto.getStatus().isBlank() ? dto.getStatus() : "TODO");
+        task.setPriority(dto.getPriority());
+        task.setPosition(dto.getPosition());
         task.setProject(project);
         task.setOrganization(organization);
 
@@ -131,6 +135,9 @@ public class TaskServiceImpl implements TaskService {
         if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
             task.setStatus(dto.getStatus());
         }
+        if (dto.getPriority() != null) {
+            task.setPriority(dto.getPriority());
+        }
         if (dto.getAffectedUserId() != null) {
             User affectedUser = userRepository.findById(dto.getAffectedUserId())
                     .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + dto.getAffectedUserId()));
@@ -142,6 +149,94 @@ public class TaskServiceImpl implements TaskService {
 
         Task saved = taskRepository.save(task);
         return taskMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public TaskResponseDto moveTask(Long id, Long orgId, TaskMoveDto dto) {
+        Task task = taskRepository.findByIdAndOrganization_Id(id, orgId)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with ID: " + id + " in organization: " + orgId));
+
+        String oldStatus = task.getStatus();
+        String newStatus = dto.getStatus();
+        boolean sameLane = oldStatus.equals(newStatus);
+
+        List<Task> laneWithoutTask = taskRepository
+                .findByOrganization_IdAndStatusOrderByPositionAsc(orgId, newStatus)
+                .stream()
+                .filter(t -> !t.getId().equals(task.getId()))
+                .collect(Collectors.toList());
+
+        // putting the task with the new status in the list in the position: insertAt.
+        int insertAt = Math.max(0, Math.min(dto.getPosition(), laneWithoutTask.size()));
+        task.setStatus(newStatus);
+        laneWithoutTask.add(insertAt, task);
+
+        // update all the lines tasks positions, to ensure there is no redudent and unique positions values for very lane.
+        // IN_PROGRESS
+
+        // D → 0
+        // E → 1
+        // F → 2
+
+        // and:
+
+        // insertAt = 1
+
+        // After laneWithoutTask.add(insertAt, task):
+
+        // D -> 0
+        // Task being moved -> 1
+        // E -> 1
+        // F -> 2
+
+        // The Java list is now:
+
+        // [
+        //     D,
+        //     task,
+        //     E,
+        //     F
+        // ]
+        // then to not have Task being moved -> 1, and E -> 1 has the same position value, we need to re-calculate all the values.
+        
+        // D -> 0
+        // Task being moved -> 1
+        // E -> 2
+        // F -> 3
+
+        int pos = 0;
+        for (Task t : laneWithoutTask) {
+            t.setPosition(pos++);
+        }
+        taskRepository.saveAll(laneWithoutTask);
+
+        // if !sameLane: so we need to re-calculate the old Line prioritie values because that task is no longer in that line.
+        // before moving E:
+
+        // D -> 0
+        // A -> 1
+        // E -> 2
+        // F -> 3
+
+        //after moving E:
+
+        // D -> 0
+        // A -> 1
+        // F -> 2
+        if (!sameLane) {
+            List<Task> oldLane = taskRepository
+                    .findByOrganization_IdAndStatusOrderByPositionAsc(orgId, oldStatus);
+            if (!oldLane.isEmpty()) {
+                int p = 0;
+                for (Task t : oldLane) {
+                    t.setPosition(p++);
+                }
+                taskRepository.saveAll(oldLane);
+            }
+        }
+
+        return taskMapper.toDto(task);
     }
 
     @Override
