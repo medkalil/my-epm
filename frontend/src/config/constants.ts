@@ -48,6 +48,27 @@ export const API_ENDPOINTS = {
     base: '/users',
     byId: (id: number) => `/users/${id}`,
   },
+  audit: {
+    base: '/audit-logs',
+    stats: '/audit-logs/stats',
+    filterOptions: '/audit-logs/filter-options',
+    export: '/audit-logs/export',
+  },
 } as const;
+
+export const AUDIT_RANGE_OPTIONS = [
+  { label: 'Last 24 hours', value: '24h' },
+  { label: 'Last 7 days', value: '7d' },
+  { label: 'Last 30 days', value: '30d' },
+  { label: 'Custom range', value: 'custom' },
+] as const;
+
+export const AUDIT_RANGE_MS: Record<'24h' | '7d' | '30d', number> = {
+  '24h': 24 * 60 * 60 * 1000,
+  '7d': 7 * 24 * 60 * 60 * 1000,
+  '30d': 30 * 24 * 60 * 60 * 1000,
+};
+
+export const DEFAULT_AUDIT_RANGE = '24h';
 
 export const DEFAULT_PAGE_SIZE = 10;

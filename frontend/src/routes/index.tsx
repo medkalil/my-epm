@@ -24,7 +24,7 @@ const OrgListPage = lazy(() => import('@/features/organization/pages/OrgListPage
 const OrgCreatePage = lazy(() => import('@/features/organization/pages/OrgCreatePage'));
 const OrgDetailPage = lazy(() => import('@/features/organization/pages/OrgDetailPage'));
 const OrgSettingsPage = lazy(() => import('@/features/organization/pages/OrgSettingsPage'));
-const OrgSecurityPage = lazy(() => import('@/features/organization/pages/OrgSecurityPage'));
+const AuditLogsPage = lazy(() => import('@/features/audit/pages/AuditLogsPage'));
 const OrgTeamPage = lazy(() => import('@/features/organization/pages/OrgTeamPage'));
 
 const withFallback = (element: ReactNode) => (
@@ -105,7 +105,7 @@ const routes: RouteObject[] = [
               },
               {
                 path: ROUTES.organizations.security(':id'),
-                element: withFallback(<OrgSecurityPage />),
+                element: withFallback(<AuditLogsPage />),
               },
             ],
           },
