@@ -8,24 +8,43 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long>, JpaSpecificationExecutor<AuditLog> {
 
     long countByOrganizationIdAndCreatedAtAfter(Long organizationId, Instant after);
 
     @Query("""
-            SELECT COUNT(a.id),
-                   AVG(CASE WHEN a.success = true THEN 1.0 ELSE 0.0 END),
-                   AVG(a.durationMs)
+            SELECT COUNT(a.id)
             FROM AuditLog a
             WHERE a.organizationId = :orgId
               AND (CAST(:from AS timestamp) IS NULL OR a.createdAt >= :from)
               AND (CAST(:to AS timestamp) IS NULL OR a.createdAt < :to)
             """)
-    Optional<Object[]> summarize(@Param("orgId") Long orgId,
-                                 @Param("from") Instant from,
-                                 @Param("to") Instant to);
+    long countEvents(@Param("orgId") Long orgId,
+                     @Param("from") Instant from,
+                     @Param("to") Instant to);
+
+    @Query("""
+            SELECT AVG(CASE WHEN a.success = true THEN 1.0 ELSE 0.0 END)
+            FROM AuditLog a
+            WHERE a.organizationId = :orgId
+              AND (CAST(:from AS timestamp) IS NULL OR a.createdAt >= :from)
+              AND (CAST(:to AS timestamp) IS NULL OR a.createdAt < :to)
+            """)
+    Double avgSuccessRate(@Param("orgId") Long orgId,
+                          @Param("from") Instant from,
+                          @Param("to") Instant to);
+
+    @Query("""
+            SELECT AVG(a.durationMs)
+            FROM AuditLog a
+            WHERE a.organizationId = :orgId
+              AND (CAST(:from AS timestamp) IS NULL OR a.createdAt >= :from)
+              AND (CAST(:to AS timestamp) IS NULL OR a.createdAt < :to)
+            """)
+    Double avgDurationMs(@Param("orgId") Long orgId,
+                         @Param("from") Instant from,
+                         @Param("to") Instant to);
 
     @Query("""
             SELECT a.action, COUNT(a.id)

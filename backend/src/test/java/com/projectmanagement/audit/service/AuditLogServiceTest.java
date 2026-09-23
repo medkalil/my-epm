@@ -90,10 +90,11 @@ class AuditLogServiceTest {
         assertEquals("CREATE", response.getContent().get(0).getAction());
     }
 
-    @Test
+@Test
     void stats_aggregatesRows() {
-        when(auditLogRepository.summarize(eq(1L), any(), any()))
-                .thenReturn(Optional.of(new Object[]{2L, 0.5, 100.0}));
+        when(auditLogRepository.countEvents(eq(1L), any(), any())).thenReturn(2L);
+        when(auditLogRepository.avgSuccessRate(eq(1L), any(), any())).thenReturn(0.5);
+        when(auditLogRepository.avgDurationMs(eq(1L), any(), any())).thenReturn(100.0);
         when(auditLogRepository.countByOrganizationIdAndCreatedAtAfter(eq(1L), any())).thenReturn(3L);
         when(auditLogRepository.countByAction(eq(1L), any(), any()))
                 .thenReturn(List.<Object[]>of(
@@ -119,6 +120,29 @@ class AuditLogServiceTest {
         assertEquals("PROJECT", response.getByResource().get(0).getName());
         assertEquals("bob", response.getTopActors().get(0).getName());
         assertEquals("2026-09-20", response.getDailyTrend().get(0).getName());
+    }
+
+    @Test
+    void stats_withoutRows_returnsZeros() {
+        when(auditLogRepository.countEvents(eq(1L), any(), any())).thenReturn(0L);
+        when(auditLogRepository.avgSuccessRate(eq(1L), any(), any())).thenReturn(null);
+        when(auditLogRepository.avgDurationMs(eq(1L), any(), any())).thenReturn(null);
+        when(auditLogRepository.countByOrganizationIdAndCreatedAtAfter(eq(1L), any())).thenReturn(0L);
+        when(auditLogRepository.countByAction(eq(1L), any(), any())).thenReturn(List.of());
+        when(auditLogRepository.countByResource(eq(1L), any(), any())).thenReturn(List.of());
+        when(auditLogRepository.countByActor(eq(1L), any(), any(), any(Pageable.class)))
+                .thenReturn(List.of());
+        when(auditLogRepository.countByDay(eq(1L), any(), any())).thenReturn(List.of());
+
+        AuditStatisticsResponse response = auditLogService.stats(1L, null, null);
+
+        assertEquals(0L, response.getTotalEvents());
+        assertEquals(0.0, response.getSuccessRate(), 0.001);
+        assertEquals(0.0, response.getAvgDurationMs(), 0.001);
+        assertTrue(response.getByAction().isEmpty());
+        assertTrue(response.getByResource().isEmpty());
+        assertTrue(response.getTopActors().isEmpty());
+        assertTrue(response.getDailyTrend().isEmpty());
     }
 
     @Test
