@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import com.projectmanagement.task.dto.TaskCreateDto;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -61,21 +62,21 @@ public class AuditLoggingAspect {
                     ? response.getStatusCode().value()
                     : HttpStatus.OK.value();
             persist(uri, httpMethod, action.get(), actor, ip, userAgent, status, true, null,
-                    System.currentTimeMillis() - start);
+                    System.currentTimeMillis() - start, joinPoint);
             return result;
         } catch (Throwable t) {
             persist(uri, httpMethod, action.get(), actor, ip, userAgent, statusFor(t), false,
-                    t.getMessage(), System.currentTimeMillis() - start);
+                    t.getMessage(), System.currentTimeMillis() - start, joinPoint);
             throw t;
         }
     }
 
     private void persist(String uri, String httpMethod, AuditActionType action, String actor,
                          String ip, String userAgent, int status, boolean success,
-                         String errorMessage, long durationMs) {
+                         String errorMessage, long durationMs,ProceedingJoinPoint joinPoint) {
         AuditResourceInfo resource = resolveResource(uri);
         AuditLogEntry entry = new AuditLogEntry(
-                resolveOrgId(uri),
+                resolveOrgId(uri, joinPoint),
                 actor,
                 action.name(),
                 resource.type().name(),
@@ -154,22 +155,39 @@ public class AuditLoggingAspect {
         };
     }
 
-    private Long resolveOrgId(String uri) {
+    private Long resolveOrgId(String uri, ProceedingJoinPoint joinPoint) {
         HttpServletRequest request = currentRequest();
+
+        // 1. Query parameter: orgId or organizationId
         if (request != null) {
             String orgIdParam = request.getParameter("orgId");
+
+            if (orgIdParam == null || orgIdParam.isBlank()) {
+                orgIdParam = request.getParameter("organizationId");
+            }
+
             if (orgIdParam != null && !orgIdParam.isBlank()) {
                 try {
                     return Long.parseLong(orgIdParam);
                 } catch (NumberFormatException ignored) {
-                    // fall through to path-based resolution
+                    // fall through
                 }
             }
         }
+
+        // 2. Path: /organizations/{id}
         String[] segments = uri.split("/");
         if (segments.length > 4 && segments[3].equals("organizations")) {
             return parseLong(segments, 4);
         }
+
+        // 3. Specific case: createTask(@RequestBody TaskCreateDto request)
+        for (Object arg : joinPoint.getArgs()) {
+            if (arg instanceof TaskCreateDto req) {
+                return req.getOrganizationId();
+            }
+        }
+
         return null;
     }
 

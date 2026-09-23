@@ -26,9 +26,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AuditLogServiceImpl implements AuditLogService {
@@ -142,19 +140,17 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     @Transactional(readOnly = true)
     public AuditStatisticsResponse stats(Long orgId, Instant from, Instant to) {
-        Optional<Object[]> summary = auditLogRepository.summarize(orgId, from, to);
-        long totalEvents = summary.map(row -> toLong(row[0])).orElse(0L);
-        double successRate = summary.map(row -> Math.round(toDouble(row[1]) * 1000.0) / 10.0).orElse(0.0);
-        double avgDurationMs = summary.map(row -> round1(toDouble(row[2]))).orElse(0.0);
+        long totalEvents = auditLogRepository.countEvents(orgId, from, to);
+        double successRate = round1(nvl(auditLogRepository.avgSuccessRate(orgId, from, to), 0.0) * 100.0);
+        double avgDurationMs = round1(nvl(auditLogRepository.avgDurationMs(orgId, from, to), 0.0));
 
         long last24hCount = auditLogRepository.countByOrganizationIdAndCreatedAtAfter(
                 orgId, Instant.now().minus(Duration.ofHours(24)));
 
-        List<NameValue> byAction = toNameValues(auditLogRepository.countByAction(orgId, from, to));
-        List<NameValue> byResource = toNameValues(auditLogRepository.countByResource(orgId, from, to));
-        List<NameValue> topActors = toNameValues(
-                auditLogRepository.countByActor(orgId, from, to, PageRequest.of(0, 5)));
-        List<NameValue> dailyTrend = toDayValues(auditLogRepository.countByDay(orgId, from, to));
+        List<NameValue> byAction    = toNameValues(auditLogRepository.countByAction(orgId, from, to));
+        List<NameValue> byResource  = toNameValues(auditLogRepository.countByResource(orgId, from, to));
+        List<NameValue> topActors   = toNameValues(auditLogRepository.countByActor(orgId, from, to, PageRequest.of(0, 5)));
+        List<NameValue> dailyTrend  = toDayValues(auditLogRepository.countByDay(orgId, from, to));
 
         return new AuditStatisticsResponse(totalEvents, successRate, avgDurationMs, last24hCount,
                 byAction, byResource, topActors, dailyTrend);
@@ -256,9 +252,10 @@ public class AuditLogServiceImpl implements AuditLogService {
     private List<NameValue> toNameValues(List<Object[]> rows) {
         List<NameValue> result = new ArrayList<>();
         for (Object[] row : rows) {
-            if (row[0] != null) {
-                result.add(new NameValue(String.valueOf(row[0]), toLong(row[1])));
+            if (row.length < 2 || row[0] == null) {
+                continue;
             }
+            result.add(new NameValue(String.valueOf(row[0]), toLong(row[1])));
         }
         return result;
     }
@@ -266,20 +263,21 @@ public class AuditLogServiceImpl implements AuditLogService {
     private List<NameValue> toDayValues(List<Object[]> rows) {
         List<NameValue> result = new ArrayList<>();
         for (Object[] row : rows) {
-            if (row[0] != null) {
-                Instant day = ((java.util.Date) row[0]).toInstant();
-                result.add(new NameValue(DAY_FORMAT.format(day), toLong(row[1])));
+            if (row.length < 2 || row[0] == null) {
+                continue;
             }
+            Instant day = ((java.util.Date) row[0]).toInstant();
+            result.add(new NameValue(DAY_FORMAT.format(day), toLong(row[1])));
         }
         return result;
     }
 
-    private static long toLong(Object value) {
-        return value instanceof Number number ? number.longValue() : 0L;
+    private static double nvl(Double value, double fallback) {
+        return value != null ? value : fallback;
     }
 
-    private static double toDouble(Object value) {
-        return value instanceof Number number ? number.doubleValue() : 0.0;
+    private static long toLong(Object value) {
+        return value instanceof Number number ? number.longValue() : 0L;
     }
 
     private static double round1(double value) {
