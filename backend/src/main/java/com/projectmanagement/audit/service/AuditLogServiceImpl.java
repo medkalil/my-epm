@@ -266,7 +266,7 @@ public class AuditLogServiceImpl implements AuditLogService {
             if (row.length < 2 || row[0] == null) {
                 continue;
             }
-            Instant day = ((java.util.Date) row[0]).toInstant();
+            Instant day = (Instant) row[0];
             result.add(new NameValue(DAY_FORMAT.format(day), toLong(row[1])));
         }
         return result;

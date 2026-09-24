@@ -7,7 +7,6 @@ import {
   Modal,
   List,
   Typography,
-  App,
   Grid,
 } from 'antd';
 import {
@@ -22,9 +21,8 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useOrgStore } from '@/stores/orgStore';
-import { organizationService } from '@/services/organization.service';
+import { useSwitchOrganization } from '@/features/organization/api/organization.queries';
 import { ROUTES } from '@/routes/paths';
-import { getApiErrorMessage } from '@/lib/axios';
 
 const { Text } = Typography;
 
@@ -32,6 +30,7 @@ interface HeaderProps {
   collapsed: boolean;
   onToggle: () => void;
   orgSwitchOpen: boolean;
+  onOpenOrgSwitch?: () => void;
   onCloseOrgSwitch: () => void;
 }
 
@@ -39,24 +38,21 @@ export function Header({
   collapsed,
   onToggle,
   orgSwitchOpen,
+  onOpenOrgSwitch,
   onCloseOrgSwitch,
 }: HeaderProps) {
   const navigate = useNavigate();
-  const { message } = App.useApp();
   const screens = Grid.useBreakpoint();
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const organizations = useOrgStore((state) => state.organizations);
-  const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
+  const switchOrg = useSwitchOrganization();
 
-  const handleOrgChange = async (orgId: number) => {
-    try {
-      const org = await organizationService.switchActive(orgId);
-      setActiveOrganization(org);
-      message.success(`Switched active workspace to ${org.name}`);
-      onCloseOrgSwitch();
-    } catch (error) {
-      message.error(getApiErrorMessage(error));
-    }
+  const handleOrgChange = (orgId: number) => {
+    switchOrg.mutate(orgId, {
+      onSuccess: () => {
+        onCloseOrgSwitch();
+      },
+    });
   };
 
   return (
@@ -112,7 +108,7 @@ export function Header({
             type="default"
             size="middle"
             icon={<BankOutlined style={{ color: '#1677FF' }} />}
-            onClick={() => onCloseOrgSwitch()}
+            onClick={onOpenOrgSwitch}
             style={{ borderRadius: 8, fontWeight: 500 }}
           >
             {activeOrganization?.name || 'Switch Workspace'}

@@ -35,8 +35,7 @@ import { useOrgStore } from '@/stores/orgStore';
 import { ROUTES } from '@/routes/paths';
 import { useCreateProject } from '@/features/project/api/project.queries';
 import { useCreateTask } from '@/features/task/api/task.queries';
-import { useAddMember } from '@/features/organization/api/organization.queries';
-import { organizationService } from '@/services/organization.service';
+import { useAddMember, useSwitchOrganization } from '@/features/organization/api/organization.queries';
 import { getApiErrorMessage } from '@/lib/axios';
 import type { Project } from '@/features/project/types/project.types';
 
@@ -48,7 +47,7 @@ export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const organizations = useOrgStore((state) => state.organizations);
-  const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
+  const switchOrg = useSwitchOrganization();
 
   const { projects, tasks, members, isLoading } = useDashboardStats();
 
@@ -122,14 +121,8 @@ export default function DashboardPage() {
     }
   };
 
-  const handleOrgSwitch = async (orgId: number) => {
-    try {
-      const org = await organizationService.switchActive(orgId);
-      setActiveOrganization(org);
-      message.success(`Switched to ${org.name}`);
-    } catch (error) {
-      message.error(getApiErrorMessage(error));
-    }
+  const handleOrgSwitch = (orgId: number) => {
+    switchOrg.mutate(orgId);
   };
 
   const projectColumns = [

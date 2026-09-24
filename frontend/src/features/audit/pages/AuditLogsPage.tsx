@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { App as AntApp, Card, Space } from 'antd';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { AUDIT_RANGE_MS, DEFAULT_AUDIT_RANGE } from '@/config/constants';
+import { ROUTES } from '@/routes/paths';
+import { useOrgStore } from '@/stores/orgStore';
 import { getApiErrorMessage } from '@/lib/axios';
 import { downloadBlob } from '@/lib/download';
 import { auditService } from '@/services/audit.service';
@@ -19,6 +21,11 @@ export default function AuditLogsPage() {
   const { id } = useParams<{ id: string }>();
   const orgId = Number(id);
   const { message } = AntApp.useApp();
+  const navigate = useNavigate();
+
+  const activeOrganization = useOrgStore((state) => state.activeOrganization);
+  const organizations = useOrgStore((state) => state.organizations);
+  const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
 
   const [range, setRange] = useState<AuditRangeKey>(DEFAULT_AUDIT_RANGE);
   const [filter, setFilter] = useState<AuditFilterState>(() => {
@@ -35,6 +42,37 @@ export default function AuditLogsPage() {
   const logsQuery = useAuditLogs(orgId, filter, page, size);
   const statsQuery = useAuditStats(orgId, filter);
   const optionsQuery = useAuditFilterOptions(orgId, filter);
+  
+  // Track changes to activeOrganization in orgStore and navigate if changed
+  const prevActiveOrgIdRef = useRef(activeOrganization?.id);
+  useEffect(() => {
+    if (
+      prevActiveOrgIdRef.current &&
+      activeOrganization?.id &&
+      prevActiveOrgIdRef.current !== activeOrganization.id &&
+      activeOrganization.id !== orgId
+    ) {
+      navigate(ROUTES.organizations.security(activeOrganization.id), { replace: true });
+    }
+    prevActiveOrgIdRef.current = activeOrganization?.id;
+  }, [activeOrganization?.id, orgId, navigate]);
+
+  // If user navigated directly to an org URL, align activeOrganization context
+  useEffect(() => {
+    if (orgId && activeOrganization?.id !== orgId && organizations.length > 0) {
+      const targetOrg = organizations.find((o) => o.id === orgId);
+      if (targetOrg) {
+        setActiveOrganization(targetOrg);
+      }
+    }
+  }, [orgId, activeOrganization?.id, organizations, setActiveOrganization]);
+
+  // Reset pagination when switching organizations
+  useEffect(() => {
+    setPage(0);
+    setSize(10);
+  }, [orgId]);
+
 
   if (!orgId) return <LoadingSpinner />;
 
