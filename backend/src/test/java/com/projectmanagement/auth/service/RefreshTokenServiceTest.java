@@ -120,6 +120,26 @@ class RefreshTokenServiceTest {
     }
 
     @Test
+    void revokeToken_existingToken_deletes() {
+        RefreshToken token = new RefreshToken();
+        token.setToken("to-revoke");
+        when(refreshTokenRepository.findByToken("to-revoke")).thenReturn(Optional.of(token));
+
+        refreshTokenService.revokeToken("to-revoke");
+
+        verify(refreshTokenRepository).delete(token);
+    }
+
+    @Test
+    void revokeToken_unknownToken_noOp() {
+        when(refreshTokenRepository.findByToken("missing")).thenReturn(Optional.empty());
+
+        refreshTokenService.revokeToken("missing");
+
+        verify(refreshTokenRepository, never()).delete(any());
+    }
+
+    @Test
     void deleteByUserId_success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(refreshTokenRepository.deleteByUser(testUser)).thenReturn(1);

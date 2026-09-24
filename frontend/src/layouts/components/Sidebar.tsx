@@ -15,6 +15,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/routes/paths';
 import { useOrgStore } from '@/stores/orgStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useLogoutMutation } from '@/features/auth/api/auth.queries';
 
 const { Text } = Typography;
 
@@ -28,15 +29,12 @@ export function Sidebar({ collapsed, onOpenOrgSwitch }: SidebarProps) {
   const navigate = useNavigate();
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const user = useAuthStore((state) => state.user);
-  const clearAuth = useAuthStore((state) => state.clear);
-  const clearOrg = useOrgStore((state) => state.clear);
+  const logoutMutation = useLogoutMutation();
 
   const orgId = activeOrganization?.id;
 
   const handleLogout = () => {
-    clearAuth();
-    clearOrg();
-    navigate(ROUTES.login);
+    logoutMutation.mutate();
   };
 
   const menuItems: Required<MenuProps>['items'] = [
