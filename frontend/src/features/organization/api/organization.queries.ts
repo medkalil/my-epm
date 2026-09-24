@@ -69,7 +69,6 @@ export function useSwitchOrganization() {
     mutationFn: (orgId: number) => organizationService.switchActive(orgId),
     onSuccess: (org) => {
       setActiveOrganization(org);
-      void queryClient.invalidateQueries();
       message.success(`Switched to ${org.name}`);
 
       const match = location.pathname.match(/^\/organizations\/(\d+)(.*)$/);
@@ -77,6 +76,8 @@ export function useSwitchOrganization() {
         const subpath = match[2] || '';
         navigate(`/organizations/${org.id}${subpath}`, { replace: true });
       }
+
+      void queryClient.invalidateQueries({ queryKey: ['organizations', 'mine'] });
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });

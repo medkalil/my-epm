@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { App as AntApp, Card, Space } from 'antd';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { AUDIT_RANGE_MS, DEFAULT_AUDIT_RANGE } from '@/config/constants';
-import { ROUTES } from '@/routes/paths';
 import { useOrgStore } from '@/stores/orgStore';
 import { getApiErrorMessage } from '@/lib/axios';
 import { downloadBlob } from '@/lib/download';
@@ -21,7 +20,6 @@ export default function AuditLogsPage() {
   const { id } = useParams<{ id: string }>();
   const orgId = Number(id);
   const { message } = AntApp.useApp();
-  const navigate = useNavigate();
 
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const organizations = useOrgStore((state) => state.organizations);
@@ -39,23 +37,17 @@ export default function AuditLogsPage() {
   const [size, setSize] = useState(10);
   const [exporting, setExporting] = useState<AuditExportFormat | null>(null);
 
+  // Synchronously reset pagination when orgId changes (avoids an extra post-render fetch cycle)
+  const [prevOrgId, setPrevOrgId] = useState(orgId);
+  if (prevOrgId !== orgId) {
+    setPrevOrgId(orgId);
+    setPage(0);
+    setSize(10);
+  }
+
   const logsQuery = useAuditLogs(orgId, filter, page, size);
   const statsQuery = useAuditStats(orgId, filter);
   const optionsQuery = useAuditFilterOptions(orgId, filter);
-  
-  // Track changes to activeOrganization in orgStore and navigate if changed
-  const prevActiveOrgIdRef = useRef(activeOrganization?.id);
-  useEffect(() => {
-    if (
-      prevActiveOrgIdRef.current &&
-      activeOrganization?.id &&
-      prevActiveOrgIdRef.current !== activeOrganization.id &&
-      activeOrganization.id !== orgId
-    ) {
-      navigate(ROUTES.organizations.security(activeOrganization.id), { replace: true });
-    }
-    prevActiveOrgIdRef.current = activeOrganization?.id;
-  }, [activeOrganization?.id, orgId, navigate]);
 
   // If user navigated directly to an org URL, align activeOrganization context
   useEffect(() => {
@@ -66,12 +58,6 @@ export default function AuditLogsPage() {
       }
     }
   }, [orgId, activeOrganization?.id, organizations, setActiveOrganization]);
-
-  // Reset pagination when switching organizations
-  useEffect(() => {
-    setPage(0);
-    setSize(10);
-  }, [orgId]);
 
 
   if (!orgId) return <LoadingSpinner />;
