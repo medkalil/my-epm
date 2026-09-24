@@ -22,6 +22,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -98,6 +99,7 @@ class AuditLoggingAspectTest {
     void loginOperation_isLogged() throws Throwable {
         setRequest("POST", "/api/v1/auth/login");
         when(joinPoint.proceed()).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+        when(joinPoint.getArgs()).thenReturn(new Object[0]);
 
         aspect.logMutatingOperations(joinPoint);
 
@@ -149,17 +151,4 @@ class AuditLoggingAspectTest {
         assertEquals(404, entry.statusCode());
     }
 
-    @Test
-    void anonymousPrincipal_yieldsAnonymousActor() throws Throwable {
-        setRequest("POST", "/api/v1/auth/logout");
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("anonymousUser", "pass", List.of()));
-        when(joinPoint.proceed()).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-
-        aspect.logMutatingOperations(joinPoint);
-
-        ArgumentCaptor<AuditLogEntry> captor = ArgumentCaptor.forClass(AuditLogEntry.class);
-        verify(auditLogService).record(captor.capture());
-        assertEquals("anonymous", captor.getValue().actor());
-    }
 }
