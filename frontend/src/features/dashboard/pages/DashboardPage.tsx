@@ -35,7 +35,8 @@ import { useOrgStore } from '@/stores/orgStore';
 import { ROUTES } from '@/routes/paths';
 import { useCreateProject } from '@/features/project/api/project.queries';
 import { useCreateTask } from '@/features/task/api/task.queries';
-import { useAddMember, useSwitchOrganization } from '@/features/organization/api/organization.queries';
+import { AssignProjectMemberModal } from '@/features/project/components/AssignProjectMemberModal';
+import { useSwitchOrganization } from '@/features/organization/api/organization.queries';
 import { getApiErrorMessage } from '@/lib/axios';
 import type { Project } from '@/features/project/types/project.types';
 
@@ -54,15 +55,15 @@ export default function DashboardPage() {
   // Modals for Quick Actions
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
   const [projectForm] = Form.useForm();
   const [taskForm] = Form.useForm();
-  const [inviteForm] = Form.useForm();
 
   const createProjectMutation = useCreateProject();
   const createTaskMutation = useCreateTask();
-  const addMemberMutation = useAddMember(activeOrganization?.id);
+
+  const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
 
   // Derived metrics
   const totalProjects = projects.length;
@@ -101,21 +102,6 @@ export default function DashboardPage() {
       message.success(`Task "${values.title}" created`);
       taskForm.resetFields();
       setIsTaskModalOpen(false);
-    } catch (error) {
-      message.error(getApiErrorMessage(error));
-    }
-  };
-
-  const handleInviteMember = async () => {
-    try {
-      const values = await inviteForm.validateFields();
-      await addMemberMutation.mutateAsync({
-        userId: values.userId,
-        role: values.role || 'MEMBER',
-      });
-      message.success('Member added successfully');
-      inviteForm.resetFields();
-      setIsInviteModalOpen(false);
     } catch (error) {
       message.error(getApiErrorMessage(error));
     }
@@ -195,7 +181,7 @@ export default function DashboardPage() {
           <Button
             size="small"
             icon={<UserAddOutlined />}
-            onClick={() => setIsInviteModalOpen(true)}
+            onClick={() => setSelectedProjectId(record.id)}
           />
         </Space>
       ),
@@ -527,14 +513,6 @@ export default function DashboardPage() {
                 >
                   + Create Task
                 </Button>
-                {/* <Button
-                  block
-                  icon={<TeamOutlined />}
-                  onClick={() => setIsInviteModalOpen(true)}
-                  style={{ height: 38 }}
-                >
-                  + Invite Member ()
-                </Button> */}
               </Space>
             </Card>
 
@@ -739,33 +717,12 @@ export default function DashboardPage() {
         </Form>
       </Modal>
 
-      {/* Quick Invite Member Modal */}
-      <Modal
-        title="Add Member to Organization"
-        open={isInviteModalOpen}
-        onOk={handleInviteMember}
-        onCancel={() => setIsInviteModalOpen(false)}
-        confirmLoading={addMemberMutation.isPending}
-      >
-        <Form form={inviteForm} layout="vertical">
-          <Form.Item
-            name="userId"
-            label="User ID"
-            rules={[{ required: true, message: 'Please enter user ID' }]}
-          >
-            <Input type="number" placeholder="Enter user ID (e.g. 2)" />
-          </Form.Item>
-          <Form.Item name="role" label="Organization Role" initialValue="MEMBER">
-            <Select
-              options={[
-                { label: 'ADMIN', value: 'ADMIN' },
-                { label: 'MEMBER', value: 'MEMBER' },
-                { label: 'GUEST', value: 'GUEST' },
-              ]}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* Manage Project Contributors Modal */}
+      <AssignProjectMemberModal
+        project={selectedProject}
+        open={!!selectedProject}
+        onClose={() => setSelectedProjectId(null)}
+      />
     </div>
   );
 }
