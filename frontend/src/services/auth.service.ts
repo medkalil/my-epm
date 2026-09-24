@@ -28,6 +28,11 @@ export const authService = {
     return data;
   },
 
+  async logout(refreshToken: string): Promise<string> {
+    const { data } = await api.post<string>(API_ENDPOINTS.auth.logout, { refreshToken });
+    return data;
+  },
+
   async forgotPassword(payload: ForgotPasswordRequest): Promise<string> {
     const { data } = await api.post<string>(API_ENDPOINTS.auth.forgotPassword, payload);
     return data;

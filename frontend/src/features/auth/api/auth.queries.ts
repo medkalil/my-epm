@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/services/auth.service';
 import type { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth.types';
@@ -79,6 +79,28 @@ export function useRegisterMutation() {
         orgs.find((o) => o.id === data.currentOrganizationId) || orgs[0];
       setActiveOrganization(active ?? null);
       navigate(ROUTES.dashboard, { replace: true });
+    },
+  });
+}
+
+export function useLogoutMutation() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const refreshToken = useAuthStore((state) => state.refreshToken);
+  const clearAuth = useAuthStore((state) => state.clear);
+  const clearOrg = useOrgStore((state) => state.clear);
+
+  return useMutation({
+    mutationFn: async () => {
+      if (refreshToken) {
+        await authService.logout(refreshToken);
+      }
+    },
+    onSettled: () => {
+      clearAuth();
+      clearOrg();
+      queryClient.clear();
+      navigate(ROUTES.login, { replace: true });
     },
   });
 }

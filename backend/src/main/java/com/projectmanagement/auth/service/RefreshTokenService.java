@@ -58,6 +58,11 @@ public class RefreshTokenService {
     }
 
     @Transactional
+    public void revokeToken(String token) {
+        refreshTokenRepository.findByToken(token).ifPresent(refreshTokenRepository::delete);
+    }
+
+    @Transactional
     public int deleteByUserId(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));

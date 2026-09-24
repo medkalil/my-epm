@@ -138,6 +138,12 @@ public class AuthController {
                         "Refresh token is not in database!"));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(@Valid @RequestBody TokenRefreshRequest request) {
+        refreshTokenService.revokeToken(request.refreshToken());
+        return ResponseEntity.ok("Logged out successfully. Your session has been revoked.");
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
         passwordResetService.requestPasswordReset(forgotPasswordRequest.identifier());

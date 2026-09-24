@@ -270,6 +270,29 @@ class AuthControllerTest {
     }
 
     @Test
+    void logout_validRequest_revokesTokenAndReturns200() throws Exception {
+        TokenRefreshRequest request = new TokenRefreshRequest("valid-refresh-token");
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(org.hamcrest.Matchers.containsString("Logged out")));
+
+        org.mockito.Mockito.verify(refreshTokenService).revokeToken("valid-refresh-token");
+    }
+
+    @Test
+    void logout_blankRefreshToken_returns400() throws Exception {
+        TokenRefreshRequest request = new TokenRefreshRequest("");
+
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void forgotPassword_validRequest_returnsGenericMessage() throws Exception {
         ForgotPasswordRequest request = new ForgotPasswordRequest("alice@example.com");
 

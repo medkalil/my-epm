@@ -266,10 +266,26 @@ public class AuditLogServiceImpl implements AuditLogService {
             if (row.length < 2 || row[0] == null) {
                 continue;
             }
-            Instant day = (Instant) row[0];
+            Instant day = toInstant(row[0]);
+            if (day == null) {
+                continue;
+            }
             result.add(new NameValue(DAY_FORMAT.format(day), toLong(row[1])));
         }
         return result;
+    }
+
+    private static Instant toInstant(Object value) {
+        if (value instanceof Instant instant) {
+            return instant;
+        }
+        if (value instanceof java.sql.Timestamp timestamp) {
+            return timestamp.toInstant();
+        }
+        if (value instanceof java.sql.Date date) {
+            return date.toInstant();
+        }
+        return null;
     }
 
     private static double nvl(Double value, double fallback) {
