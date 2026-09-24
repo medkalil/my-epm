@@ -527,14 +527,14 @@ export default function DashboardPage() {
                 >
                   + Create Task
                 </Button>
-                <Button
+                {/* <Button
                   block
                   icon={<TeamOutlined />}
                   onClick={() => setIsInviteModalOpen(true)}
                   style={{ height: 38 }}
                 >
-                  + Invite Member
-                </Button>
+                  + Invite Member ()
+                </Button> */}
               </Space>
             </Card>
 
