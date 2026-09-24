@@ -25,6 +25,7 @@ export function DashboardLayout() {
           collapsed={collapsed}
           onToggle={() => setCollapsed(!collapsed)}
           orgSwitchOpen={orgSwitchOpen}
+          onOpenOrgSwitch={() => setOrgSwitchOpen(true)}
           onCloseOrgSwitch={() => setOrgSwitchOpen(false)}
         />
         <Content

@@ -9,6 +9,7 @@ import type {
 } from '../types/organization.types';
 import { useOrgStore } from '@/stores/orgStore';
 import { App } from 'antd';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '@/lib/axios';
 
 export function useMyOrganizations() {
@@ -61,6 +62,8 @@ export function useSwitchOrganization() {
   const queryClient = useQueryClient();
   const { message } = App.useApp();
   const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return useMutation({
     mutationFn: (orgId: number) => organizationService.switchActive(orgId),
@@ -68,6 +71,12 @@ export function useSwitchOrganization() {
       setActiveOrganization(org);
       void queryClient.invalidateQueries();
       message.success(`Switched to ${org.name}`);
+
+      const match = location.pathname.match(/^\/organizations\/(\d+)(.*)$/);
+      if (match) {
+        const subpath = match[2] || '';
+        navigate(`/organizations/${org.id}${subpath}`, { replace: true });
+      }
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });
