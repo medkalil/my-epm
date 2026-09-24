@@ -28,8 +28,9 @@ export const authService = {
     return data;
   },
 
-  async logout(refreshToken: string): Promise<string> {
-    const { data } = await api.post<string>(API_ENDPOINTS.auth.logout, { refreshToken });
+  async logout(refreshToken: string, organizationId?: number): Promise<string> {
+    const query = typeof organizationId === 'number' ? `?orgId=${organizationId}` : '';
+    const { data } = await api.post<string>(`${API_ENDPOINTS.auth.logout}${query}`, { refreshToken });
     return data;
   },
 

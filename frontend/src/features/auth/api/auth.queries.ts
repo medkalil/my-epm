@@ -92,8 +92,9 @@ export function useLogoutMutation() {
 
   return useMutation({
     mutationFn: async () => {
+      const organizationId = useOrgStore.getState().activeOrganization?.id;
       if (refreshToken) {
-        await authService.logout(refreshToken);
+        await authService.logout(refreshToken, organizationId);
       }
     },
     onSettled: () => {
