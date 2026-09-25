@@ -4,6 +4,7 @@ import { organizationService } from '@/services/organization.service';
 import type {
   CreateOrganizationRequest,
   AddMemberRequest,
+  InviteMemberRequest,
   Organization,
   OrganizationMember,
   JoinRequest,
@@ -96,6 +97,23 @@ export function useAddMember(orgId: number | undefined) {
         queryKey: ['organizations', orgId, 'members'],
       });
       message.success('Member added successfully');
+    },
+    onError: (error) => message.error(getApiErrorMessage(error)),
+  });
+}
+
+export function useInviteUser(orgId: number | undefined) {
+  const queryClient = useQueryClient();
+  const { message } = App.useApp();
+
+  return useMutation({
+    mutationFn: (payload: InviteMemberRequest) =>
+      organizationService.inviteMember(orgId!, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['organizations', orgId, 'members'],
+      });
+      message.success('User invited successfully. An email with sign-in credentials has been sent.');
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });

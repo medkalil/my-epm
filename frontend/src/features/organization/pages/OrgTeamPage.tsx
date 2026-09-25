@@ -4,7 +4,7 @@ import { UserAddOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { MemberTable } from '../components/MemberTable';
-import { AddMemberModal } from '../components/AddMemberModal';
+import { InviteUserModal } from '../components/InviteUserModal';
 import { JoinRequestsSection } from '../components/JoinRequestsSection';
 import { useOrganizationMembers } from '../api/organization.queries';
 
@@ -28,7 +28,7 @@ export default function OrgTeamPage() {
             icon={<UserAddOutlined />}
             onClick={() => setModalOpen(true)}
           >
-            Add member
+            Invite user
           </Button>
         }
       />
@@ -54,7 +54,7 @@ export default function OrgTeamPage() {
         </Typography.Text>
       </Space>
 
-      <AddMemberModal
+      <InviteUserModal
         open={modalOpen}
         orgId={orgId}
         onClose={() => setModalOpen(false)}

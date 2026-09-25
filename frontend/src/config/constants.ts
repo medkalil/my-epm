@@ -23,12 +23,14 @@ export const API_ENDPOINTS = {
     logout: '/auth/logout',
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
+    changePassword: '/auth/change-password',
   },
   organizations: {
     base: '/organizations',
     my: '/organizations/my',
     bySlug: (slug: string) => `/organizations/slug/${slug}`,
     members: (id: number) => `/organizations/${id}/members`,
+    membersInvite: (id: number) => `/organizations/${id}/members/invite`,
     switch: (id: number) => `/organizations/${id}/switch`,
     joinRequests: (orgId: number) => `/organizations/${orgId}/join-requests`,
     approveJoinRequest: (orgId: number, requestId: number) =>

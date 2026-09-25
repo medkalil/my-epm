@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nameSchema, slugSchema } from '@/lib/zod';
+import { emailSchema, nameSchema, slugSchema } from '@/lib/zod';
 import { OrgRole } from '@/types/common';
 
 export const createOrganizationSchema = z.object({
@@ -10,10 +10,12 @@ export const createOrganizationSchema = z.object({
 
 export type CreateOrganizationFormValues = z.infer<typeof createOrganizationSchema>;
 
-export const inviteMemberSchema = z
-  .object({
-    userId: z.number().int().positive('Select a user'),
-    role: z.nativeEnum(OrgRole),
-  });
+export const inviteMemberSchema = z.object({
+  fullName: z.string().min(2, 'Full name is required'),
+  email: emailSchema,
+  role: z.nativeEnum(OrgRole).refine((role) => role !== OrgRole.OWNER, {
+    message: 'OWNER role cannot be assigned via invite',
+  }),
+});
 
 export type InviteMemberFormValues = z.infer<typeof inviteMemberSchema>;

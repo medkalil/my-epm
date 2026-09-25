@@ -6,6 +6,7 @@ import com.projectmanagement.auth.dto.request.RegisterRequest;
 import com.projectmanagement.auth.dto.request.TokenRefreshRequest;
 import com.projectmanagement.auth.dto.request.ForgotPasswordRequest;
 import com.projectmanagement.auth.dto.request.ResetPasswordRequest;
+import com.projectmanagement.auth.dto.request.ChangePasswordRequest;
 import com.projectmanagement.auth.entity.RefreshToken;
 import com.projectmanagement.auth.exception.TokenRefreshException;
 import com.projectmanagement.auth.security.JwtUtils;
@@ -42,6 +43,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.mockito.ArgumentCaptor;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -209,6 +214,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.refreshToken").value("mock-refresh-token"))
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.username").value("alice"))
+                .andExpect(jsonPath("$.mustChangePassword").value(false))
                 .andExpect(jsonPath("$.currentOrganizationId").value(10))
                 .andExpect(jsonPath("$.organizations[0].name").value("Acme"));
     }
@@ -380,6 +386,7 @@ class AuthControllerTest {
     void login_noPendingJoinRequest_issuesTokens() throws Exception {
         LoginRequest request = new LoginRequest("alice", "password123");
         User userDetails = new User(1L, "alice", "encodedPass", "alice@example.com", "Alice Vance");
+        userDetails.setMustChangePassword(true);
         Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
         RefreshToken refreshToken = new RefreshToken();
@@ -399,7 +406,51 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-jwt-token"));
+                .andExpect(jsonPath("$.token").value("mock-jwt-token"))
+                .andExpect(jsonPath("$.mustChangePassword").value(true));
+    }
+
+    @Test
+    void changePassword_validRequest_updatesPasswordAndClearsFlag() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest("newPassword123");
+        User user = new User(1L, "bob", "oldEncodedPass", "bob@example.com", "Bob Vance");
+        user.setMustChangePassword(true);
+
+        when(userRepository.findByName("bob")).thenReturn(Optional.of(user));
+        when(encoder.encode("newPassword123")).thenReturn("newEncodedPass");
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(request1 -> {
+                            request1.setUserPrincipal(new UsernamePasswordAuthenticationToken("bob", ""));
+                            return request1;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(org.hamcrest.Matchers.containsString("Password changed successfully")));
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User saved = userCaptor.getValue();
+        assertEquals("newEncodedPass", saved.getPassword());
+        assertFalse(saved.isMustChangePassword());
+        verify(refreshTokenService).deleteByUserId(1L);
+    }
+
+    @Test
+    void changePassword_blankNewPassword_returns400() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest("");
+
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(request1 -> {
+                            request1.setUserPrincipal(new UsernamePasswordAuthenticationToken("bob", ""));
+                            return request1;
+                        }))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"));
     }
 
     @Test

@@ -21,5 +21,6 @@ export const ROUTES = {
   register: '/register',
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
+  changePassword: '/change-password',
   notFound: '*',
 } as const;

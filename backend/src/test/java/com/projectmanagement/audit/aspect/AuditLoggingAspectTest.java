@@ -133,6 +133,24 @@ class AuditLoggingAspectTest {
     }
 
     @Test
+    void inviteMemberOperation_isLogged() throws Throwable {
+        setRequest("POST", "/api/v1/organizations/1/members/invite");
+        authenticateAs("bob");
+        when(joinPoint.proceed()).thenReturn(new ResponseEntity<>(HttpStatus.CREATED));
+
+        aspect.logMutatingOperations(joinPoint);
+
+        ArgumentCaptor<AuditLogEntry> captor = ArgumentCaptor.forClass(AuditLogEntry.class);
+        verify(auditLogService).record(captor.capture());
+        AuditLogEntry entry = captor.getValue();
+        assertEquals("CREATE", entry.action());
+        assertEquals("MEMBER", entry.resource());
+        assertNull(entry.resourceId());
+        assertEquals(1L, entry.organizationId());
+        assertEquals(201, entry.statusCode());
+    }
+
+    @Test
     void thrownException_isLoggedAsFailure() throws Throwable {
         setRequest("DELETE", "/api/v1/projects/42").addParameter("orgId", "3");
         authenticateAs("bob");

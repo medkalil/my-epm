@@ -15,6 +15,7 @@ const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
+const ChangePasswordPage = lazy(() => import('@/features/auth/pages/ChangePasswordPage'));
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'));
 const ProjectListPage = lazy(() => import('@/features/project/pages/ProjectListPage'));
 const ProjectDetailPage = lazy(() => import('@/features/project/pages/ProjectDetailPage'));
@@ -76,6 +77,10 @@ const routes: RouteObject[] = [
   {
     element: <AuthGuard />,
     children: [
+      {
+        path: ROUTES.changePassword,
+        element: withFallback(<ChangePasswordPage />),
+      },
       {
         element: <DashboardLayout />,
         children: [

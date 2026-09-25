@@ -43,4 +43,11 @@ export const authService = {
     const { data } = await api.post<string>(API_ENDPOINTS.auth.resetPassword, payload);
     return data;
   },
+
+  async changePassword(newPassword: string): Promise<string> {
+    const { data } = await api.post<string>(API_ENDPOINTS.auth.changePassword, {
+      newPassword,
+    });
+    return data;
+  },
 };

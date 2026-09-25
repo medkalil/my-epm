@@ -36,6 +36,7 @@ export interface LoginResponse {
   username: string;
   email?: string;
   fullName?: string;
+  mustChangePassword?: boolean;
   currentOrganizationId?: number | null;
   organizations?: Organization[];
 }

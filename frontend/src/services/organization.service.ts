@@ -6,6 +6,7 @@ import type {
   JoinRequest,
   CreateOrganizationRequest,
   AddMemberRequest,
+  InviteMemberRequest,
 } from '@/features/organization/types/organization.types';
 
 export const organizationService = {
@@ -39,6 +40,14 @@ export const organizationService = {
   async addMember(orgId: number, payload: AddMemberRequest): Promise<OrganizationMember> {
     const { data } = await api.post<OrganizationMember>(
       API_ENDPOINTS.organizations.members(orgId),
+      payload,
+    );
+    return data;
+  },
+
+  async inviteMember(orgId: number, payload: InviteMemberRequest): Promise<OrganizationMember> {
+    const { data } = await api.post<OrganizationMember>(
+      API_ENDPOINTS.organizations.membersInvite(orgId),
       payload,
     );
     return data;
