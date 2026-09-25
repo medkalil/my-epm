@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { organizationService } from '@/services/organization.service';
 import { userService } from '@/services/user.service';
 import { useOrgStore } from '@/stores/orgStore';
-import type { Page } from '@/types/api';
 import type { Organization } from '@/features/organization/types/organization.types';
 import type { User } from '@/features/user/types/user.types';
 
@@ -17,9 +16,9 @@ export function useOrganizationOverview() {
     queryFn: () => organizationService.getMine(),
   });
 
-  const usersQuery = useQuery<Page<User>>({
+  const usersQuery = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: () => userService.list({ page: 0, size: 100 }),
+    queryFn: () => userService.list(),
     staleTime: 5 * 60_000,
   });
 

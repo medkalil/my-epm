@@ -26,14 +26,14 @@ export function AddMemberModal({ open, orgId, onClose }: AddMemberModalProps) {
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['users', 'options'],
-    queryFn: () => userService.list({ page: 0, size: 100 }),
+    queryFn: () => userService.list(),
     enabled: open,
   });
 
   const addMemberMutation = useAddMember(orgId);
 
   const userOptions =
-    usersData?.content.map((user) => ({
+    usersData?.map((user) => ({
       label: user.name,
       value: user.id,
     })) ?? [];
