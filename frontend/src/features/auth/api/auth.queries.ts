@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { App } from 'antd';
 import { authService } from '@/services/auth.service';
 import type { LoginRequest, LoginResponse, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth.types';
 import { useAuthStore } from '@/stores/authStore';
 import { useOrgStore } from '@/stores/orgStore';
 import { ROUTES } from '@/routes/paths';
+import { getApiErrorMessage } from '@/lib/axios';
 
 export function useLoginMutation() {
   const navigate = useNavigate();
@@ -23,6 +25,20 @@ export function useLoginMutation() {
         username: data.username,
         email: data.email,
       });
+
+      if (data.mustChangePassword) {
+        const orgs = data.organizations ?? [];
+        setOrganizations(orgs);
+        if (orgs.length > 0) {
+          const active =
+            orgs.find((o) => o.id === data.currentOrganizationId) || orgs[0];
+          setActiveOrganization(active ?? null);
+        } else {
+          setActiveOrganization(null);
+        }
+        navigate(ROUTES.changePassword, { replace: true });
+        return;
+      }
 
       const orgs = data.organizations ?? [];
       setOrganizations(orgs);
@@ -126,5 +142,19 @@ export function useForgotPasswordMutation() {
 export function useResetPasswordMutation() {
   return useMutation({
     mutationFn: (payload: ResetPasswordRequest) => authService.resetPassword(payload),
+  });
+}
+
+export function useChangePasswordMutation() {
+  const navigate = useNavigate();
+  const { message } = App.useApp();
+
+  return useMutation({
+    mutationFn: (newPassword: string) => authService.changePassword(newPassword),
+    onSuccess: () => {
+      message.success('Password changed successfully');
+      navigate(ROUTES.dashboard, { replace: true });
+    },
+    onError: (error) => message.error(getApiErrorMessage(error)),
   });
 }

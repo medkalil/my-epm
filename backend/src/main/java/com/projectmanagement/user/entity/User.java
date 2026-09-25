@@ -19,6 +19,7 @@ public class User implements UserDetails {
     private String password;
     private String email;
     private String fullName;
+    private boolean mustChangePassword = false;
 
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY)
     private Set<Project> projects = new HashSet<>();
@@ -55,6 +56,9 @@ public class User implements UserDetails {
     @Override // From UserDetails
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public boolean isMustChangePassword() { return mustChangePassword; }
+    public void setMustChangePassword(boolean mustChangePassword) { this.mustChangePassword = mustChangePassword; }
 
     // UserDetails methods
     @Override

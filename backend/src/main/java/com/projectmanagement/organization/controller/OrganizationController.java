@@ -2,6 +2,7 @@ package com.projectmanagement.organization.controller;
 
 import com.projectmanagement.organization.dto.request.AddMemberRequest;
 import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
+import com.projectmanagement.organization.dto.request.InviteMemberRequest;
 import com.projectmanagement.organization.dto.response.OrganizationMemberResponse;
 import com.projectmanagement.organization.dto.response.OrganizationResponse;
 import com.projectmanagement.organization.service.OrganizationService;
@@ -66,6 +67,16 @@ public class OrganizationController {
     public ResponseEntity<List<OrganizationMemberResponse>> getMembers(@P("id") @PathVariable("id") Long id) {
         List<OrganizationMemberResponse> members = organizationService.getMembers(id);
         return ResponseEntity.ok(members);
+    }
+
+    @PostMapping("/{id}/members/invite")
+    @PreAuthorize("@orgSecurity.hasRole(#id, 'OWNER', 'ADMIN')")
+    public ResponseEntity<OrganizationMemberResponse> inviteMember(
+            @P("id") @PathVariable("id") Long id,
+            @Valid @RequestBody InviteMemberRequest request,
+            Authentication authentication) {
+        OrganizationMemberResponse response = organizationService.inviteUser(id, request, authentication.getName());
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/{id}/switch")

@@ -35,6 +35,12 @@ export interface AddMemberRequest {
   role: OrgRole;
 }
 
+export interface InviteMemberRequest {
+  fullName: string;
+  email: string;
+  role: OrgRole;
+}
+
 export type JoinRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface JoinRequest {

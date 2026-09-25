@@ -4,10 +4,11 @@ export {
   useCreateOrganization,
   useSwitchOrganization,
   useAddMember,
+  useInviteUser,
 } from './api/organization.queries';
 export { CreateOrganizationForm } from './components/CreateOrganizationForm';
 export { MemberTable } from './components/MemberTable';
-export { AddMemberModal } from './components/AddMemberModal';
+export { InviteUserModal } from './components/InviteUserModal';
 export { OrganizationCard } from './components/OrganizationCard';
 export {
   createOrganizationSchema,
@@ -18,4 +19,5 @@ export type {
   OrganizationMember,
   CreateOrganizationRequest,
   AddMemberRequest,
+  InviteMemberRequest,
 } from './types/organization.types';

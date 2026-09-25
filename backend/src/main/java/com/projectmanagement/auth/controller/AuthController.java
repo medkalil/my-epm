@@ -6,11 +6,13 @@ import com.projectmanagement.auth.dto.request.RegisterRequest;
 import com.projectmanagement.auth.dto.request.TokenRefreshRequest;
 import com.projectmanagement.auth.dto.request.ForgotPasswordRequest;
 import com.projectmanagement.auth.dto.request.ResetPasswordRequest;
+import com.projectmanagement.auth.dto.request.ChangePasswordRequest;
 import com.projectmanagement.auth.dto.response.TokenRefreshResponse;
 import com.projectmanagement.auth.exception.JoinRequestPendingException;
 import com.projectmanagement.auth.exception.TokenRefreshException;
 import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
 import com.projectmanagement.user.entity.User;
+import com.projectmanagement.user.exception.UserNotFoundException;
 import com.projectmanagement.auth.entity.RefreshToken;
 import com.projectmanagement.user.repository.UserRepository;
 import com.projectmanagement.auth.security.JwtUtils;
@@ -94,6 +96,7 @@ public class AuthController {
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 userDetails.getFullName(),
+                userDetails.isMustChangePassword(),
                 currentOrgId,
                 userOrgs));
     }
@@ -168,5 +171,21 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
         passwordResetService.resetPassword(resetPasswordRequest.token(), resetPasswordRequest.newPassword());
         return ResponseEntity.ok("Password has been reset successfully. Please sign in with your new password.");
+    }
+
+    @PostMapping("/change-password")
+    @Transactional
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest,
+                                            Authentication authentication) {
+        User user = userRepository.findByName(authentication.getName())
+                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + authentication.getName()));
+
+        user.setPassword(encoder.encode(changePasswordRequest.newPassword()));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
+
+        refreshTokenService.deleteByUserId(user.getId());
+
+        return ResponseEntity.ok("Password changed successfully. Please sign in again.");
     }
 }

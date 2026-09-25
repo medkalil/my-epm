@@ -2,6 +2,7 @@ package com.projectmanagement.organization.service;
 
 import com.projectmanagement.organization.dto.request.AddMemberRequest;
 import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
+import com.projectmanagement.organization.dto.request.InviteMemberRequest;
 import com.projectmanagement.organization.dto.response.OrganizationMemberResponse;
 import com.projectmanagement.organization.dto.response.OrganizationResponse;
 
@@ -15,5 +16,6 @@ public interface OrganizationService {
     Long getActiveOrganizationId(String currentUsername);
     OrganizationResponse switchActiveOrganization(Long organizationId, String currentUsername);
     OrganizationMemberResponse addMember(Long organizationId, AddMemberRequest request);
+    OrganizationMemberResponse inviteUser(Long organizationId, InviteMemberRequest request, String currentUsername);
     List<OrganizationMemberResponse> getMembers(Long organizationId);
 }
