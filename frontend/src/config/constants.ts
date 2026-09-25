@@ -30,6 +30,11 @@ export const API_ENDPOINTS = {
     bySlug: (slug: string) => `/organizations/slug/${slug}`,
     members: (id: number) => `/organizations/${id}/members`,
     switch: (id: number) => `/organizations/${id}/switch`,
+    joinRequests: (orgId: number) => `/organizations/${orgId}/join-requests`,
+    approveJoinRequest: (orgId: number, requestId: number) =>
+      `/organizations/${orgId}/join-requests/${requestId}/approve`,
+    rejectJoinRequest: (orgId: number, requestId: number) =>
+      `/organizations/${orgId}/join-requests/${requestId}/reject`,
   },
   projects: {
     base: '/projects',

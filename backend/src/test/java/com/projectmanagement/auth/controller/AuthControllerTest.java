@@ -14,6 +14,10 @@ import com.projectmanagement.auth.service.PasswordResetService;
 import com.projectmanagement.common.exception.GlobalExceptionHandler;
 import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
 import com.projectmanagement.organization.dto.response.OrganizationResponse;
+import com.projectmanagement.organization.entity.JoinRequestStatus;
+import com.projectmanagement.organization.entity.Organization;
+import com.projectmanagement.organization.entity.OrganizationJoinRequest;
+import com.projectmanagement.organization.service.JoinRequestService;
 import com.projectmanagement.organization.service.OrganizationService;
 import com.projectmanagement.user.dto.response.UserResponse;
 import com.projectmanagement.user.entity.User;
@@ -39,6 +43,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -73,6 +79,9 @@ class AuthControllerTest {
     @Mock
     private OrganizationService organizationService;
 
+    @Mock
+    private JoinRequestService joinRequestService;
+
     @InjectMocks
     private AuthController authController;
 
@@ -85,7 +94,7 @@ class AuthControllerTest {
 
     @Test
     void register_success() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null);
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null, null);
         User savedUser = new User(1L, "alice", "encodedPassword", "alice@example.com", "Alice Vance");
         UserResponse userResponse = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
 
@@ -108,7 +117,7 @@ class AuthControllerTest {
     @Test
     void register_withOrganization_createsUserAndOrganization() throws Exception {
         RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123",
-                new RegisterRequest.OrganizationOnboarding("Acme Corp", "acme-corp"));
+                new RegisterRequest.OrganizationOnboarding("Acme Corp", "acme-corp"), null);
         User savedUser = new User(1L, "alice", "encodedPassword", "alice@example.com", "Alice Vance");
         UserResponse userResponse = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
 
@@ -132,7 +141,7 @@ class AuthControllerTest {
 
     @Test
     void register_usernameAlreadyTaken_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null);
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null, null);
         User existing = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
 
         when(userRepository.findByName("alice")).thenReturn(Optional.of(existing));
@@ -146,7 +155,7 @@ class AuthControllerTest {
 
     @Test
     void register_emailAlreadyTaken_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice2", "alice@example.com", "Alice Vance 2", "password123", null);
+        RegisterRequest request = new RegisterRequest("alice2", "alice@example.com", "Alice Vance 2", "password123", null, null);
         User existing = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
 
         when(userRepository.findByName("alice2")).thenReturn(Optional.empty());
@@ -161,7 +170,7 @@ class AuthControllerTest {
 
     @Test
     void register_validationFailure_blankFields_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "", "", "", null);
+        RegisterRequest request = new RegisterRequest("", "", "", "", null, null);
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -267,6 +276,113 @@ class AuthControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status").value(403))
                 .andExpect(jsonPath("$.message").value("Failed for [unknown-refresh-token]: Refresh token is not in database!"));
+    }
+
+    @Test
+    void register_withJoinOrganizationSlug_createsUserAndJoinRequest() throws Exception {
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123",
+                null, "acme-corp");
+        User savedUser = new User(1L, "alice", "encodedPassword", "alice@example.com", "Alice Vance");
+        UserResponse userResponse = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
+
+        when(userRepository.findByName("alice")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.empty());
+        when(encoder.encode("password123")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(userMapper.toResponse(savedUser)).thenReturn(userResponse);
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        org.mockito.Mockito.verify(joinRequestService).createForRegister("acme-corp", "alice");
+    }
+
+    @Test
+    void register_bothOrganizationAndJoinSlug_returns400() throws Exception {
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123",
+                new RegisterRequest.OrganizationOnboarding("Acme Corp", "acme-corp"), "acme-corp");
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void login_withPendingJoinRequest_returns403() throws Exception {
+        LoginRequest request = new LoginRequest("alice", "password123");
+        User userDetails = new User(1L, "alice", "encodedPass", "alice@example.com", "Alice Vance");
+        Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        Organization org = new Organization();
+        org.setId(10L);
+        org.setName("Acme Corp");
+        OrganizationJoinRequest joinRequest = new OrganizationJoinRequest();
+        joinRequest.setOrganization(org);
+        joinRequest.setStatus(JoinRequestStatus.PENDING);
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
+        when(joinRequestService.findBlockingRequest("alice")).thenReturn(Optional.of(joinRequest));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Your request to join 'Acme Corp' is still awaiting approval."));
+
+        verify(refreshTokenService, never()).createRefreshToken(any(Long.class));
+    }
+
+    @Test
+    void login_withRejectedJoinRequest_returns403() throws Exception {
+        LoginRequest request = new LoginRequest("alice", "password123");
+        User userDetails = new User(1L, "alice", "encodedPass", "alice@example.com", "Alice Vance");
+        Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        Organization org = new Organization();
+        org.setId(10L);
+        org.setName("Acme Corp");
+        OrganizationJoinRequest joinRequest = new OrganizationJoinRequest();
+        joinRequest.setOrganization(org);
+        joinRequest.setStatus(JoinRequestStatus.REJECTED);
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
+        when(joinRequestService.findBlockingRequest("alice")).thenReturn(Optional.of(joinRequest));
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Your request to join 'Acme Corp' was rejected."));
+    }
+
+    @Test
+    void login_noPendingJoinRequest_issuesTokens() throws Exception {
+        LoginRequest request = new LoginRequest("alice", "password123");
+        User userDetails = new User(1L, "alice", "encodedPass", "alice@example.com", "Alice Vance");
+        Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken("mock-refresh-token");
+        refreshToken.setUser(userDetails);
+
+        OrganizationResponse orgResponse = new OrganizationResponse(10L, "Acme", "acme", 1L, "alice", Instant.now(), Instant.now());
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
+        when(joinRequestService.findBlockingRequest("alice")).thenReturn(Optional.empty());
+        when(jwtUtils.generateJwtToken(auth)).thenReturn("mock-jwt-token");
+        when(refreshTokenService.createRefreshToken(1L)).thenReturn(refreshToken);
+        when(organizationService.getUserOrganizations("alice")).thenReturn(List.of(orgResponse));
+        when(organizationService.getActiveOrganizationId("alice")).thenReturn(10L);
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("mock-jwt-token"));
     }
 
     @Test

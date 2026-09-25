@@ -6,6 +6,7 @@ import type {
   AddMemberRequest,
   Organization,
   OrganizationMember,
+  JoinRequest,
 } from '../types/organization.types';
 import { useOrgStore } from '@/stores/orgStore';
 import { App } from 'antd';
@@ -95,6 +96,43 @@ export function useAddMember(orgId: number | undefined) {
         queryKey: ['organizations', orgId, 'members'],
       });
       message.success('Member added successfully');
+    },
+    onError: (error) => message.error(getApiErrorMessage(error)),
+  });
+}
+
+export function useJoinRequests(orgId: number | undefined) {
+  return useQuery<JoinRequest[]>({
+    queryKey: ['organizations', orgId, 'join-requests'],
+    queryFn: () => organizationService.listJoinRequests(orgId!),
+    enabled: !!orgId,
+  });
+}
+
+export function useApproveJoinRequest(orgId: number | undefined) {
+  const queryClient = useQueryClient();
+  const { message } = App.useApp();
+
+  return useMutation({
+    mutationFn: (requestId: number) => organizationService.approveJoinRequest(orgId!, requestId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['organizations', orgId, 'join-requests'] });
+      void queryClient.invalidateQueries({ queryKey: ['organizations', orgId, 'members'] });
+      message.success('Join request approved');
+    },
+    onError: (error) => message.error(getApiErrorMessage(error)),
+  });
+}
+
+export function useRejectJoinRequest(orgId: number | undefined) {
+  const queryClient = useQueryClient();
+  const { message } = App.useApp();
+
+  return useMutation({
+    mutationFn: (requestId: number) => organizationService.rejectJoinRequest(orgId!, requestId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['organizations', orgId, 'join-requests'] });
+      message.success('Join request rejected');
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });

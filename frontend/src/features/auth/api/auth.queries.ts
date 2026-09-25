@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/services/auth.service';
-import type { LoginRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth.types';
+import type { LoginRequest, LoginResponse, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth.types';
 import { useAuthStore } from '@/stores/authStore';
 import { useOrgStore } from '@/stores/orgStore';
 import { ROUTES } from '@/routes/paths';
@@ -47,25 +47,36 @@ export function useRegisterMutation() {
   const setOrganizations = useOrgStore((state) => state.setOrganizations);
   const setActiveOrganization = useOrgStore((state) => state.setActiveOrganization);
 
-  return useMutation({
+  return useMutation<{ join: boolean; data?: LoginResponse }, unknown, RegisterRequest>({
     mutationFn: async (payload: RegisterRequest) => {
-      // 1. Register account + provision organization atomically on the backend
+      // 1. Register account (creates organization or pending join request) atomically
       await authService.register({
         username: payload.username,
         email: payload.email,
         fullName: payload.fullName,
         password: payload.password,
         organization: payload.organization,
+        joinOrganizationSlug: payload.joinOrganizationSlug,
       });
 
-      // 2. Auto-authenticate to obtain JWT session
+      // 2. Join-request signup: login stays blocked until the owner approves
+      if (payload.joinOrganizationSlug) {
+        return { join: true };
+      }
+
+      // 3. Auto-authorize to obtain JWT session
       const loginData = await authService.login({
         identifier: payload.username,
         password: payload.password,
       });
-      return loginData;
+      return { join: false, data: loginData };
     },
-    onSuccess: (data) => {
+    onSuccess: (result) => {
+      if (result.join) {
+        navigate(ROUTES.login, { replace: true });
+        return;
+      }
+      const data = result.data!;
       setTokens(data.token, data.refreshToken);
       setUser({
         id: data.id,

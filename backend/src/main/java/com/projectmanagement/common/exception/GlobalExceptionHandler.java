@@ -2,6 +2,7 @@ package com.projectmanagement.common.exception;
 
 import com.projectmanagement.auth.exception.TokenRefreshException;
 import com.projectmanagement.auth.exception.InvalidPasswordResetTokenException;
+import com.projectmanagement.auth.exception.JoinRequestPendingException;
 import com.projectmanagement.common.dto.ErrorResponse;
 import com.projectmanagement.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,9 @@ import java.util.Map;
 
 import com.projectmanagement.organization.exception.OrganizationNotFoundException;
 import com.projectmanagement.organization.exception.OrganizationSlugAlreadyExistsException;
+import com.projectmanagement.organization.exception.OrganizationJoinRequestNotFoundException;
+import com.projectmanagement.organization.exception.JoinRequestAlreadyReviewedException;
+import com.projectmanagement.organization.exception.JoinRequestConflictException;
 import com.projectmanagement.project.exception.ProjectNotFoundException;
 import com.projectmanagement.project.exception.ProjectNotEditableException;
 import com.projectmanagement.task.exception.TaskNotFoundException;
@@ -53,6 +57,38 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(OrganizationSlugAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleOrganizationSlugAlreadyExistsException(OrganizationSlugAlreadyExistsException ex) {
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(OrganizationJoinRequestNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrganizationJoinRequestNotFound(
+            OrganizationJoinRequestNotFoundException ex) {
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(JoinRequestAlreadyReviewedException.class)
+    public ResponseEntity<ErrorResponse> handleJoinRequestAlreadyReviewed(
+            JoinRequestAlreadyReviewedException ex) {
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(JoinRequestConflictException.class)
+    public ResponseEntity<ErrorResponse> handleJoinRequestConflict(JoinRequestConflictException ex) {
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 HttpStatus.CONFLICT.getReasonPhrase(),
@@ -113,6 +149,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TokenRefreshException.class)
     public ResponseEntity<ErrorResponse> handleTokenRefreshException(TokenRefreshException ex) {
+        ErrorResponse response = new ErrorResponse(
+                HttpStatus.FORBIDDEN.value(),
+                HttpStatus.FORBIDDEN.getReasonPhrase(),
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(JoinRequestPendingException.class)
+    public ResponseEntity<ErrorResponse> handleJoinRequestPendingException(JoinRequestPendingException ex) {
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.FORBIDDEN.value(),
                 HttpStatus.FORBIDDEN.getReasonPhrase(),
