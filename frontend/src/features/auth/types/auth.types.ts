@@ -14,6 +14,7 @@ export interface RegisterRequest {
     name: string;
     slug: string;
   };
+  joinOrganizationSlug?: string;
 }
 
 export interface AuthTokens {

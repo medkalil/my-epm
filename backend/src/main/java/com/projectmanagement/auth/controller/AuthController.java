@@ -7,6 +7,7 @@ import com.projectmanagement.auth.dto.request.TokenRefreshRequest;
 import com.projectmanagement.auth.dto.request.ForgotPasswordRequest;
 import com.projectmanagement.auth.dto.request.ResetPasswordRequest;
 import com.projectmanagement.auth.dto.response.TokenRefreshResponse;
+import com.projectmanagement.auth.exception.JoinRequestPendingException;
 import com.projectmanagement.auth.exception.TokenRefreshException;
 import com.projectmanagement.organization.dto.request.CreateOrganizationRequest;
 import com.projectmanagement.user.entity.User;
@@ -17,6 +18,7 @@ import com.projectmanagement.user.mapper.UserMapper;
 import com.projectmanagement.auth.service.RefreshTokenService;
 import com.projectmanagement.auth.service.PasswordResetService;
 import com.projectmanagement.organization.dto.response.OrganizationResponse;
+import com.projectmanagement.organization.service.JoinRequestService;
 import com.projectmanagement.organization.service.OrganizationService;
 
 import jakarta.validation.Valid;
@@ -44,6 +46,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final PasswordResetService passwordResetService;
     private final OrganizationService organizationService;
+    private final JoinRequestService joinRequestService;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserRepository userRepository,
@@ -52,7 +55,8 @@ public class AuthController {
                           UserMapper userMapper,
                           RefreshTokenService refreshTokenService,
                           PasswordResetService passwordResetService,
-                          OrganizationService organizationService) {
+                          OrganizationService organizationService,
+                          JoinRequestService joinRequestService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.encoder = encoder;
@@ -61,6 +65,7 @@ public class AuthController {
         this.refreshTokenService = refreshTokenService;
         this.passwordResetService = passwordResetService;
         this.organizationService = organizationService;
+        this.joinRequestService = joinRequestService;
     }
 
     @PostMapping("/login")
@@ -73,6 +78,11 @@ public class AuthController {
         String jwt = jwtUtils.generateJwtToken(authentication);
 
         User userDetails = (User) authentication.getPrincipal();
+
+        joinRequestService.findBlockingRequest(userDetails.getUsername()).ifPresent(request -> {
+            throw new JoinRequestPendingException(request.getOrganization().getName(), request.getStatus());
+        });
+
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 
         List<OrganizationResponse> userOrgs = organizationService.getUserOrganizations(userDetails.getUsername());
@@ -91,6 +101,12 @@ public class AuthController {
     @PostMapping("/register")
     @Transactional
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+        if (registerRequest.organization() != null && registerRequest.joinOrganizationSlug() != null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Error: Provide either organization details to create a workspace, or an organization slug to join an existing one, not both.");
+        }
+
         if (userRepository.findByName(registerRequest.username()).isPresent()) {
             return ResponseEntity
                     .badRequest()
@@ -118,6 +134,9 @@ public class AuthController {
             organizationService.createOrganization(
                     new CreateOrganizationRequest(org.name(), org.slug()),
                     savedUser.getName());
+        } else if (registerRequest.joinOrganizationSlug() != null) {
+            // Create a pending join request for the target organization; login stays blocked until approved
+            joinRequestService.createForRegister(registerRequest.joinOrganizationSlug(), savedUser.getName());
         }
 
         return ResponseEntity.ok(userMapper.toResponse(savedUser));

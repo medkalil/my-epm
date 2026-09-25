@@ -4,6 +4,10 @@ import com.projectmanagement.audit.dto.AuditLogEntry;
 import com.projectmanagement.audit.types.AuditActionType;
 import com.projectmanagement.audit.types.AuditResourceType;
 import com.projectmanagement.audit.service.AuditLogService;
+import com.projectmanagement.auth.dto.request.RegisterRequest;
+import com.projectmanagement.organization.exception.JoinRequestAlreadyReviewedException;
+import com.projectmanagement.organization.exception.JoinRequestConflictException;
+import com.projectmanagement.organization.exception.OrganizationJoinRequestNotFoundException;
 import com.projectmanagement.organization.exception.OrganizationNotFoundException;
 import com.projectmanagement.organization.exception.OrganizationSlugAlreadyExistsException;
 import com.projectmanagement.project.exception.ProjectNotEditableException;
@@ -74,7 +78,7 @@ public class AuditLoggingAspect {
     private void persist(String uri, String httpMethod, AuditActionType action, String actor,
                          String ip, String userAgent, int status, boolean success,
                          String errorMessage, long durationMs,ProceedingJoinPoint joinPoint) {
-        AuditResourceInfo resource = resolveResource(uri);
+        AuditResourceInfo resource = resolveResource(uri, joinPoint);
         AuditLogEntry entry = new AuditLogEntry(
                 resolveOrgId(uri, joinPoint),
                 actor,
@@ -126,6 +130,14 @@ public class AuditLoggingAspect {
         if (uri.contains("/move")) {
             return Optional.of(AuditActionType.MOVE);
         }
+        if (uri.contains("/join-requests/")) {
+            String last = segments[segments.length - 1];
+            return switch (last) {
+                case "approve" -> Optional.of(AuditActionType.APPROVE);
+                case "reject" -> Optional.of(AuditActionType.REJECT);
+                default -> Optional.empty();
+            };
+        }
         return switch (httpMethod) {
             case "POST" -> Optional.of(AuditActionType.CREATE);
             case "PUT", "PATCH" -> Optional.of(AuditActionType.UPDATE);
@@ -134,12 +146,20 @@ public class AuditLoggingAspect {
         };
     }
 
-    private AuditResourceInfo resolveResource(String uri) {
+    private AuditResourceInfo resolveResource(String uri, ProceedingJoinPoint joinPoint) {
         String[] segments = uri.split("/");
         if (segments.length < 4) {
             return new AuditResourceInfo(AuditResourceType.OTHER, null);
         }
         String base = segments[3];
+        // Registering with a join slug targets a join request, not plain auth
+        if (base.equals("auth") && uri.endsWith("/register")) {
+            for (Object arg : joinPoint.getArgs()) {
+                if (arg instanceof RegisterRequest request && request.joinOrganizationSlug() != null) {
+                    return new AuditResourceInfo(AuditResourceType.JOIN_REQUEST, null);
+                }
+            }
+        }
         return switch (base) {
             case "auth" -> new AuditResourceInfo(AuditResourceType.AUTH, null);
             case "tasks" -> new AuditResourceInfo(AuditResourceType.TASK, parseLong(segments, 4));
@@ -148,6 +168,9 @@ public class AuditLoggingAspect {
             case "organizations" -> {
                 if (segments.length > 5 && segments[5].equals("members")) {
                     yield new AuditResourceInfo(AuditResourceType.MEMBER, parseLong(segments, 6));
+                }
+                if (segments.length > 5 && segments[5].equals("join-requests")) {
+                    yield new AuditResourceInfo(AuditResourceType.JOIN_REQUEST, parseLong(segments, 6));
                 }
                 yield new AuditResourceInfo(AuditResourceType.ORGANIZATION, parseLong(segments, 4));
             }
@@ -226,14 +249,18 @@ public class AuditLoggingAspect {
         if (t instanceof ProjectNotFoundException
                 || t instanceof TaskNotFoundException
                 || t instanceof OrganizationNotFoundException
+                || t instanceof OrganizationJoinRequestNotFoundException
                 || t instanceof UserNotFoundException) {
             return HttpStatus.NOT_FOUND.value();
         }
         if (t instanceof ProjectNotEditableException
-                || t instanceof OrganizationSlugAlreadyExistsException) {
+                || t instanceof OrganizationSlugAlreadyExistsException
+                || t instanceof JoinRequestAlreadyReviewedException
+                || t instanceof JoinRequestConflictException) {
             return HttpStatus.CONFLICT.value();
         }
-        if (t instanceof AccessDeniedException) {
+        if (t instanceof AccessDeniedException
+                || t instanceof com.projectmanagement.auth.exception.JoinRequestPendingException) {
             return HttpStatus.FORBIDDEN.value();
         }
         if (t instanceof IllegalArgumentException

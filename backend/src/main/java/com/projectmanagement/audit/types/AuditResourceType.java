@@ -5,6 +5,7 @@ public enum AuditResourceType {
     AUTH,
     ORGANIZATION,
     MEMBER,
+    JOIN_REQUEST,
     PROJECT,
     TASK,
     USER,

@@ -34,3 +34,20 @@ export interface AddMemberRequest {
   userId: number;
   role: OrgRole;
 }
+
+export type JoinRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface JoinRequest {
+  id: number;
+  organizationId: number;
+  organizationName: string;
+  organizationSlug: string;
+  userId: number;
+  userName: string;
+  userEmail?: string;
+  status: JoinRequestStatus;
+  requestedAt: string;
+  reviewedAt?: string | null;
+  reviewerUserId?: number | null;
+  reviewerName?: string | null;
+}

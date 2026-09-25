@@ -9,5 +9,7 @@ public enum AuditActionType {
     LOGIN,
     REGISTER,
     LOGOUT,
-    SWITCH
+    SWITCH,
+    APPROVE,
+    REJECT
 }

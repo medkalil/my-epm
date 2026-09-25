@@ -3,6 +3,7 @@ import { API_ENDPOINTS } from '@/config/constants';
 import type {
   Organization,
   OrganizationMember,
+  JoinRequest,
   CreateOrganizationRequest,
   AddMemberRequest,
 } from '@/features/organization/types/organization.types';
@@ -45,6 +46,31 @@ export const organizationService = {
 
   async switchActive(orgId: number): Promise<Organization> {
     const { data } = await api.post<Organization>(API_ENDPOINTS.organizations.switch(orgId));
+    return data;
+  },
+
+  async listJoinRequests(
+    orgId: number,
+    status?: 'PENDING' | 'APPROVED' | 'REJECTED',
+  ): Promise<JoinRequest[]> {
+    const query = status ? `?status=${status}` : '';
+    const { data } = await api.get<JoinRequest[]>(
+      `${API_ENDPOINTS.organizations.joinRequests(orgId)}${query}`,
+    );
+    return data;
+  },
+
+  async approveJoinRequest(orgId: number, requestId: number): Promise<JoinRequest> {
+    const { data } = await api.post<JoinRequest>(
+      API_ENDPOINTS.organizations.approveJoinRequest(orgId, requestId),
+    );
+    return data;
+  },
+
+  async rejectJoinRequest(orgId: number, requestId: number): Promise<JoinRequest> {
+    const { data } = await api.post<JoinRequest>(
+      API_ENDPOINTS.organizations.rejectJoinRequest(orgId, requestId),
+    );
     return data;
   },
 };

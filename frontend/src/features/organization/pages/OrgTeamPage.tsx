@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { MemberTable } from '../components/MemberTable';
 import { AddMemberModal } from '../components/AddMemberModal';
+import { JoinRequestsSection } from '../components/JoinRequestsSection';
 import { useOrganizationMembers } from '../api/organization.queries';
 
 export default function OrgTeamPage() {
@@ -41,6 +42,8 @@ export default function OrgTeamPage() {
         </Typography.Paragraph>
         <MemberTable members={members} loading={isLoading} />
       </Card>
+
+      <JoinRequestsSection orgId={orgId} />
 
       <Space direction="vertical" style={{ marginTop: 16 }}>
         <Typography.Text type="secondary">
