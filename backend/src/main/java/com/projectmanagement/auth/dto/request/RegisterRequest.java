@@ -22,7 +22,6 @@ public record RegisterRequest(
     @Valid
     OrganizationOnboarding organization,
 
-    @NotBlank(message = "Organization slug is required")
     @Size(max = 100, message = "Organization slug must not exceed 100 characters")
     @Pattern(regexp = "^[a-z0-9-]+$", message = "Slug must contain only lowercase letters, numbers, and hyphens")
     String joinOrganizationSlug

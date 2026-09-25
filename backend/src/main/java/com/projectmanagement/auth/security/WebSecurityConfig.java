@@ -79,6 +79,7 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/api/v1/organizations/slug/**").permitAll() // for join org with slug
                                 .requestMatchers("/error").permitAll()
                                 .anyRequest().authenticated()
                 );
