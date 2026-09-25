@@ -101,12 +101,6 @@ public class AuthController {
     @PostMapping("/register")
     @Transactional
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        if (registerRequest.organization() != null && registerRequest.joinOrganizationSlug() != null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("Error: Provide either organization details to create a workspace, or an organization slug to join an existing one, not both.");
-        }
-
         if (userRepository.findByName(registerRequest.username()).isPresent()) {
             return ResponseEntity
                     .badRequest()
