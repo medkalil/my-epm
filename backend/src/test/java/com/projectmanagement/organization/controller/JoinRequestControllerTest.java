@@ -7,6 +7,7 @@ import com.projectmanagement.organization.entity.JoinRequestStatus;
 import com.projectmanagement.organization.exception.JoinRequestAlreadyReviewedException;
 import com.projectmanagement.organization.exception.OrganizationJoinRequestNotFoundException;
 import com.projectmanagement.organization.service.JoinRequestService;
+import com.projectmanagement.user.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,7 +49,8 @@ class JoinRequestControllerTest {
 
     private static RequestPostProcessor asUser(String username) {
         return request -> {
-            request.setUserPrincipal(new UsernamePasswordAuthenticationToken(username, ""));
+            User user = new User(1L, username, "pass", username + "@example.com", username);
+            request.setUserPrincipal(new UsernamePasswordAuthenticationToken(user, ""));
             return request;
         };
     }
@@ -82,7 +84,7 @@ class JoinRequestControllerTest {
 
     @Test
     void approve_returnsReviewedRequest() throws Exception {
-        when(joinRequestService.approve(1L, 100L, "bob")).thenReturn(response(JoinRequestStatus.APPROVED));
+        when(joinRequestService.approve(1L, 100L, 1L)).thenReturn(response(JoinRequestStatus.APPROVED));
 
         mockMvc.perform(post("/api/v1/organizations/1/join-requests/100/approve")
                         .contentType(MediaType.APPLICATION_JSON).with(asUser("bob")))
@@ -92,7 +94,7 @@ class JoinRequestControllerTest {
 
     @Test
     void reject_returnsReviewedRequest() throws Exception {
-        when(joinRequestService.reject(1L, 100L, "bob")).thenReturn(response(JoinRequestStatus.REJECTED));
+        when(joinRequestService.reject(1L, 100L, 1L)).thenReturn(response(JoinRequestStatus.REJECTED));
 
         mockMvc.perform(post("/api/v1/organizations/1/join-requests/100/reject")
                         .contentType(MediaType.APPLICATION_JSON).with(asUser("bob")))
@@ -102,7 +104,7 @@ class JoinRequestControllerTest {
 
     @Test
     void approve_alreadyReviewed_returns409() throws Exception {
-        when(joinRequestService.approve(1L, 100L, "bob"))
+        when(joinRequestService.approve(1L, 100L, 1L))
                 .thenThrow(new JoinRequestAlreadyReviewedException("This join request has already been approved"));
 
         mockMvc.perform(post("/api/v1/organizations/1/join-requests/100/approve")
@@ -114,7 +116,7 @@ class JoinRequestControllerTest {
 
     @Test
     void approve_notFound_returns404() throws Exception {
-        when(joinRequestService.approve(1L, 999L, "bob"))
+        when(joinRequestService.approve(1L, 999L, 1L))
                 .thenThrow(new OrganizationJoinRequestNotFoundException("Join request not found with ID: 999"));
 
         mockMvc.perform(post("/api/v1/organizations/1/join-requests/999/approve")

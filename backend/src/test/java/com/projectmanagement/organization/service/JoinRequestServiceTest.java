@@ -151,14 +151,14 @@ class JoinRequestServiceTest {
     void approve_success_createsMember() {
         when(joinRequestRepository.findByOrganization_IdAndId(1L, 100L)).thenReturn(Optional.of(request));
         when(memberRepository.existsByOrganizationAndUser(organization, user)).thenReturn(false);
-        when(userRepository.findByName("bob")).thenReturn(Optional.of(new User(20L, "bob", "pass")));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(new User(20L, "bob", "pass")));
         when(memberRepository.findByUserAndActiveTrue(user)).thenReturn(Optional.empty());
         when(joinRequestRepository.save(request)).thenReturn(request);
         when(joinRequestMapper.toResponse(request)).thenReturn(new JoinRequestResponse(
                 100L, 1L, "Acme Corp", "acme-corp", 10L, "alice", "alice@example.com",
                 JoinRequestStatus.APPROVED, request.getRequestedAt(), Instant.now(), 20L, "bob"));
 
-        var result = joinRequestService.approve(1L, 100L, "bob");
+        var result = joinRequestService.approve(1L, 100L, 20L);
 
         assertEquals(JoinRequestStatus.APPROVED, result.status());
         verify(memberRepository).save(any());
@@ -170,20 +170,20 @@ class JoinRequestServiceTest {
         when(memberRepository.existsByOrganizationAndUser(organization, user)).thenReturn(true);
 
         JoinRequestConflictException ex = assertThrows(JoinRequestConflictException.class,
-                () -> joinRequestService.approve(1L, 100L, "bob"));
+                () -> joinRequestService.approve(1L, 100L, 20L));
         assertTrue(ex.getMessage().contains("already a member"));
     }
 
     @Test
     void reject_success() {
         when(joinRequestRepository.findByOrganization_IdAndId(1L, 100L)).thenReturn(Optional.of(request));
-        when(userRepository.findByName("bob")).thenReturn(Optional.of(new User(20L, "bob", "pass")));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(new User(20L, "bob", "pass")));
         when(joinRequestRepository.save(request)).thenReturn(request);
         when(joinRequestMapper.toResponse(request)).thenReturn(new JoinRequestResponse(
                 100L, 1L, "Acme Corp", "acme-corp", 10L, "alice", "alice@example.com",
                 JoinRequestStatus.REJECTED, request.getRequestedAt(), Instant.now(), 20L, "bob"));
 
-        var result = joinRequestService.reject(1L, 100L, "bob");
+        var result = joinRequestService.reject(1L, 100L, 20L);
 
         assertEquals(JoinRequestStatus.REJECTED, result.status());
         verify(memberRepository, never()).save(any());
@@ -194,7 +194,7 @@ class JoinRequestServiceTest {
         request.setStatus(JoinRequestStatus.APPROVED);
         when(joinRequestRepository.findByOrganization_IdAndId(1L, 100L)).thenReturn(Optional.of(request));
 
-        assertThrows(JoinRequestAlreadyReviewedException.class, () -> joinRequestService.approve(1L, 100L, "bob"));
+        assertThrows(JoinRequestAlreadyReviewedException.class, () -> joinRequestService.approve(1L, 100L, 20L));
     }
 
     @Test
@@ -202,7 +202,7 @@ class JoinRequestServiceTest {
         when(joinRequestRepository.findByOrganization_IdAndId(1L, 999L)).thenReturn(Optional.empty());
 
         assertThrows(com.projectmanagement.organization.exception.OrganizationJoinRequestNotFoundException.class,
-                () -> joinRequestService.approve(1L, 999L, "bob"));
+                () -> joinRequestService.approve(1L, 999L, 20L));
     }
 
     @Test

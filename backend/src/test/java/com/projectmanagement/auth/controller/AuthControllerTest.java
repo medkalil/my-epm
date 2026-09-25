@@ -94,7 +94,8 @@ class AuthControllerTest {
 
     @Test
     void register_success() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null, null);
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123",
+                new RegisterRequest.OrganizationOnboarding("Acme Corp", "acme-corp"), null);
         User savedUser = new User(1L, "alice", "encodedPassword", "alice@example.com", "Alice Vance");
         UserResponse userResponse = new UserResponse(1L, "alice", "alice@example.com", "Alice Vance");
 
@@ -141,7 +142,8 @@ class AuthControllerTest {
 
     @Test
     void register_usernameAlreadyTaken_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null, null);
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123",
+                new RegisterRequest.OrganizationOnboarding("Acme Corp", "acme-corp"), null);
         User existing = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
 
         when(userRepository.findByName("alice")).thenReturn(Optional.of(existing));
@@ -155,7 +157,8 @@ class AuthControllerTest {
 
     @Test
     void register_emailAlreadyTaken_returns400() throws Exception {
-        RegisterRequest request = new RegisterRequest("alice2", "alice@example.com", "Alice Vance 2", "password123", null, null);
+        RegisterRequest request = new RegisterRequest("alice2", "alice@example.com", "Alice Vance 2", "password123",
+                new RegisterRequest.OrganizationOnboarding("Acme Corp", "acme-corp"), null);
         User existing = new User(1L, "alice", "pass", "alice@example.com", "Alice Vance");
 
         when(userRepository.findByName("alice2")).thenReturn(Optional.empty());
@@ -307,7 +310,21 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Validation failed"));
+    }
+
+    @Test
+    void register_neitherOrganizationNorJoinSlug_returns400() throws Exception {
+        RegisterRequest request = new RegisterRequest("alice", "alice@example.com", "Alice Vance", "password123", null, null);
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Validation failed"));
     }
 
     @Test
