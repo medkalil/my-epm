@@ -93,7 +93,7 @@ export function JoinRequestsSection({ orgId }: JoinRequestsSectionProps) {
                   </Popconfirm>
                   <Popconfirm
                     title="Reject this join request?"
-                    description={`${record.userName} won&apos;t be able to sign in while rejected.`}
+                    description={`${record.userName} won't be able to sign in while rejected.`}
                     okText="Reject"
                     cancelText="Cancel"
                     okButtonProps={{ danger: true }}
