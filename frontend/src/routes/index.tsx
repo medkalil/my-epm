@@ -72,15 +72,19 @@ const routes: RouteObject[] = [
           </GuestGuard>
         ),
       },
+      {
+        path: ROUTES.changePassword,
+        element: (
+          <GuestGuard>
+            <ChangePasswordPage />
+          </GuestGuard>
+        ),
+      },
     ],
   },
   {
     element: <AuthGuard />,
     children: [
-      {
-        path: ROUTES.changePassword,
-        element: withFallback(<ChangePasswordPage />),
-      },
       {
         element: <DashboardLayout />,
         children: [

@@ -42,11 +42,13 @@ export function LoginForm() {
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      await loginMutation.mutateAsync({
+      const data = await loginMutation.mutateAsync({
         identifier: values.username,
         password: values.password,
       });
-      message.success('Signed in successfully');
+      message.success(
+        data.mustChangePassword ? 'Please set a new password' : 'Signed in successfully',
+      );
     } catch (error) {
       message.error(getApiErrorMessage(error));
     }

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { App } from 'antd';
 import { authService } from '@/services/auth.service';
-import type { LoginRequest, LoginResponse, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth.types';
+import type { LoginRequest, LoginResponse, ChangePasswordRequest, RegisterRequest, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth.types';
 import { useAuthStore } from '@/stores/authStore';
 import { useOrgStore } from '@/stores/orgStore';
 import { ROUTES } from '@/routes/paths';
@@ -18,7 +18,12 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: (payload: LoginRequest) => authService.login(payload),
     onSuccess: (data) => {
-      setTokens(data.token, data.refreshToken);
+      if (data.mustChangePassword) {
+        navigate(ROUTES.changePassword, { replace: true, state: { userId: data.id } });
+        return;
+      }
+
+      setTokens(data.token!, data.refreshToken!);
       setUser({
         id: data.id,
         name: data.username,
@@ -28,19 +33,6 @@ export function useLoginMutation() {
 
       const orgs = data.organizations ?? [];
       setOrganizations(orgs);
-
-      if (data.mustChangePassword) {
-        if (orgs.length > 0) {
-          const active =
-            orgs.find((o) => o.id === data.currentOrganizationId) || orgs[0];
-          setActiveOrganization(active ?? null);
-        } else {
-          setActiveOrganization(null);
-        }
-        navigate(ROUTES.changePassword, { replace: true });
-        return;
-      }
-
 
       if (orgs.length > 0) {
         const active =
@@ -92,7 +84,7 @@ export function useRegisterMutation() {
         return;
       }
       const data = result.data!;
-      setTokens(data.token, data.refreshToken);
+      setTokens(data.token!, data.refreshToken!);
       setUser({
         id: data.id,
         name: data.username,
@@ -149,10 +141,11 @@ export function useChangePasswordMutation() {
   const { message } = App.useApp();
 
   return useMutation({
-    mutationFn: (newPassword: string) => authService.changePassword(newPassword),
+    mutationFn: (payload: ChangePasswordRequest) =>
+      authService.changePassword(payload),
     onSuccess: () => {
-      message.success('Password changed successfully');
-      navigate(ROUTES.dashboard, { replace: true });
+      message.success('Password changed. Please sign in.');
+      navigate(ROUTES.login, { replace: true });
     },
     onError: (error) => message.error(getApiErrorMessage(error)),
   });

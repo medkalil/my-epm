@@ -383,22 +383,16 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_noPendingJoinRequest_issuesTokens() throws Exception {
+    void login_userMustChangePassword_returnsNoTokens() throws Exception {
         LoginRequest request = new LoginRequest("alice", "password123");
         User userDetails = new User(1L, "alice", "encodedPass", "alice@example.com", "Alice Vance");
         userDetails.setMustChangePassword(true);
         Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken("mock-refresh-token");
-        refreshToken.setUser(userDetails);
-
         OrganizationResponse orgResponse = new OrganizationResponse(10L, "Acme", "acme", 1L, "alice", Instant.now(), Instant.now());
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
         when(joinRequestService.findBlockingRequest("alice")).thenReturn(Optional.empty());
-        when(jwtUtils.generateJwtToken(auth)).thenReturn("mock-jwt-token");
-        when(refreshTokenService.createRefreshToken(1L)).thenReturn(refreshToken);
         when(organizationService.getUserOrganizations("alice")).thenReturn(List.of(orgResponse));
         when(organizationService.getActiveOrganizationId("alice")).thenReturn(10L);
 
@@ -406,27 +400,27 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-jwt-token"))
+                .andExpect(jsonPath("$.token").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.refreshToken").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.username").value("alice"))
                 .andExpect(jsonPath("$.mustChangePassword").value(true));
     }
 
     @Test
     void changePassword_validRequest_updatesPasswordAndClearsFlag() throws Exception {
-        ChangePasswordRequest request = new ChangePasswordRequest("newPassword123");
+        ChangePasswordRequest request = new ChangePasswordRequest(1L, "oldPassword123", "newPassword123");
         User user = new User(1L, "bob", "oldEncodedPass", "bob@example.com", "Bob Vance");
         user.setMustChangePassword(true);
 
-        when(userRepository.findByName("bob")).thenReturn(Optional.of(user));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(encoder.matches("oldPassword123", "oldEncodedPass")).thenReturn(true);
         when(encoder.encode("newPassword123")).thenReturn("newEncodedPass");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         mockMvc.perform(post("/api/v1/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .with(request1 -> {
-                            request1.setUserPrincipal(new UsernamePasswordAuthenticationToken("bob", ""));
-                            return request1;
-                        }))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(org.hamcrest.Matchers.containsString("Password changed successfully")));
 
@@ -439,16 +433,44 @@ class AuthControllerTest {
     }
 
     @Test
-    void changePassword_blankNewPassword_returns400() throws Exception {
-        ChangePasswordRequest request = new ChangePasswordRequest("");
+    void changePassword_invalidCurrentPassword_returns400() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest(1L, "wrongPassword", "newPassword123");
+        User user = new User(1L, "bob", "oldEncodedPass", "bob@example.com", "Bob Vance");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(encoder.matches("wrongPassword", "oldEncodedPass")).thenReturn(false);
 
         mockMvc.perform(post("/api/v1/auth/change-password")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
-                        .with(request1 -> {
-                            request1.setUserPrincipal(new UsernamePasswordAuthenticationToken("bob", ""));
-                            return request1;
-                        }))
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").value(org.hamcrest.Matchers.containsString("Current password is incorrect")));
+    }
+
+    @Test
+    void changePassword_sameAsCurrentPassword_returns400() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest(1L, "samePassword", "samePassword");
+        User user = new User(1L, "bob", "encodedSame", "bob@example.com", "Bob Vance");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(encoder.matches("samePassword", "encodedSame")).thenReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").value(org.hamcrest.Matchers.containsString("New password must be different from the current password")));
+
+        verify(userRepository, org.mockito.Mockito.never()).save(any(User.class));
+    }
+
+    @Test
+    void changePassword_blankNewPassword_returns400() throws Exception {
+        ChangePasswordRequest request = new ChangePasswordRequest(1L, "oldPassword123", "");
+
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed"));
     }

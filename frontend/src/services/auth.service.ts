@@ -8,6 +8,7 @@ import type {
   RefreshTokenResponse,
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  ChangePasswordRequest,
 } from '@/features/auth/types/auth.types';
 
 export const authService = {
@@ -44,10 +45,8 @@ export const authService = {
     return data;
   },
 
-  async changePassword(newPassword: string): Promise<string> {
-    const { data } = await api.post<string>(API_ENDPOINTS.auth.changePassword, {
-      newPassword,
-    });
+  async changePassword(payload: ChangePasswordRequest): Promise<string> {
+    const { data } = await api.post<string>(API_ENDPOINTS.auth.changePassword, payload);
     return data;
   },
 };
