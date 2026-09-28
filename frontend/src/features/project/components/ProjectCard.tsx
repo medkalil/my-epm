@@ -16,9 +16,9 @@ interface ProjectCardProps {
   project: Project;
   orgMembers?: OrganizationMember[];
   progressPercent?: number;
-  onManageMembers: (project: Project) => void;
-  onUpdateStatus: (project: Project, status: ProjectStatus) => void;
-  onDelete: (project: Project) => void;
+  onManageMembers?: (project: Project) => void;
+  onUpdateStatus?: (project: Project, status: ProjectStatus) => void;
+  onDelete?: (project: Project) => void;
 }
 
 const statusConfig: Record<
@@ -71,50 +71,62 @@ export function ProjectCard({
     (currentStatus === 'COMPLETED' ? 100 : currentStatus === 'IN_REVIEW' ? 85 : 45);
 
   const menuItems: MenuProps['items'] = [
-    {
-      key: 'manage-members',
-      label: 'Manage Contributors',
-      icon: <UsergroupAddOutlined />,
-      onClick: () => onManageMembers(project),
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'status-header',
-      label: 'Change Status',
-      type: 'group',
-      children: [
-        {
-          key: 'set-in-progress',
-          label: 'Set In Progress',
-          disabled: currentStatus === 'IN_PROGRESS',
-          onClick: () => onUpdateStatus(project, 'IN_PROGRESS'),
-        },
-        {
-          key: 'set-in-review',
-          label: 'Set In Review',
-          disabled: currentStatus === 'IN_REVIEW',
-          onClick: () => onUpdateStatus(project, 'IN_REVIEW'),
-        },
-        {
-          key: 'set-completed',
-          label: 'Set Completed',
-          disabled: currentStatus === 'COMPLETED',
-          onClick: () => onUpdateStatus(project, 'COMPLETED'),
-        },
-      ],
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'delete',
-      danger: true,
-      label: 'Delete Project',
-      icon: <DeleteOutlined />,
-      onClick: () => onDelete(project),
-    },
+    ...(onManageMembers
+      ? [
+          {
+            key: 'manage-members',
+            label: 'Manage Contributors',
+            icon: <UsergroupAddOutlined />,
+            onClick: () => onManageMembers(project),
+          },
+          {
+            type: 'divider',
+          },
+        ]
+      : []),
+    ...(onUpdateStatus
+      ? [
+          {
+            key: 'status-header',
+            label: 'Change Status',
+            type: 'group',
+            children: [
+              {
+                key: 'set-in-progress',
+                label: 'Set In Progress',
+                disabled: currentStatus === 'IN_PROGRESS',
+                onClick: () => onUpdateStatus(project, 'IN_PROGRESS'),
+              },
+              {
+                key: 'set-in-review',
+                label: 'Set In Review',
+                disabled: currentStatus === 'IN_REVIEW',
+                onClick: () => onUpdateStatus(project, 'IN_REVIEW'),
+              },
+              {
+                key: 'set-completed',
+                label: 'Set Completed',
+                disabled: currentStatus === 'COMPLETED',
+                onClick: () => onUpdateStatus(project, 'COMPLETED'),
+              },
+            ],
+          },
+          {
+            type: 'divider',
+          },
+        ]
+      : []),
+    ...(onDelete
+      ? [
+          {
+            key: 'delete',
+            danger: true,
+            label: 'Delete Project',
+            icon: <DeleteOutlined />,
+            onClick: () => onDelete(project),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -169,9 +181,11 @@ export function ProjectCard({
           </div>
         </Space>
 
+        {menuItems.length > 0 && (
         <Dropdown menu={{ items: menuItems }} trigger={['click']}>
           <Button type="text" shape="circle" icon={<MoreOutlined />} />
         </Dropdown>
+      )}
       </div>
 
       {/* Title and description */}
@@ -242,6 +256,7 @@ export function ProjectCard({
           )}
         </Avatar.Group>
 
+        {onManageMembers && (
         <Button
           type="link"
           size="small"
@@ -251,6 +266,7 @@ export function ProjectCard({
         >
           {assignedMembers.length > 0 ? `${assignedMembers.length} Members` : 'Assign'}
         </Button>
+      )}
       </div>
     </Card>
   );

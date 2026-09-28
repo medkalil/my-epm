@@ -57,12 +57,13 @@ function applyMove(tasks: Task[], activeId: number, targetStatus: TaskStatus, ta
 
 interface TaskBoardProps {
   tasks: Task[];
-  onQuickCreate: (status: TaskStatus) => void;
+  onQuickCreate?: (status: TaskStatus) => void;
   onEdit?: (task: Task) => void;
   onDelete?: (task: Task) => void;
+  canMove?: boolean;
 }
 
-export function TaskBoard({ tasks, onQuickCreate, onEdit, onDelete }: TaskBoardProps) {
+export function TaskBoard({ tasks, onQuickCreate, onEdit, onDelete, canMove = true }: TaskBoardProps) {
   const { data: projectsData = [] } = useProjects();
   const moveMutation = useMoveTask();
 
@@ -104,6 +105,7 @@ export function TaskBoard({ tasks, onQuickCreate, onEdit, onDelete }: TaskBoardP
   );
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (!canMove) return;
     const task = displayTasks.find((t) => t.id === Number(event.active.id));
     if (task) setActiveTask(task);
   };
@@ -162,7 +164,7 @@ export function TaskBoard({ tasks, onQuickCreate, onEdit, onDelete }: TaskBoardP
 
   return (
     <DndContext
-      sensors={sensors}
+      sensors={canMove ? sensors : []}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}

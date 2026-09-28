@@ -25,7 +25,7 @@ public class ProjectController {
     }
 
     @PostMapping
-    @PreAuthorize("@orgSecurity.isMember(#request.organizationId)")
+    @PreAuthorize("@orgSecurity.isEditor(#request.organizationId)")
     public ResponseEntity<ProjectResponseDto> createProject(
             @P("request") @Valid @RequestBody ProjectCreateDto request,
             Authentication authentication) {
@@ -52,7 +52,7 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@orgSecurity.isMember(#orgId)")
+    @PreAuthorize("@orgSecurity.isEditor(#orgId)")
     public ResponseEntity<ProjectResponseDto> updateProject(
             @P("id") @PathVariable("id") Long id,
             @P("orgId") @RequestParam("orgId") Long orgId,
@@ -62,7 +62,7 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("@orgSecurity.isMember(#orgId)")
+    @PreAuthorize("@orgSecurity.hasRole(#orgId, 'OWNER', 'ADMIN')")
     public ResponseEntity<Void> deleteProject(
             @P("id") @PathVariable("id") Long id,
             @P("orgId") @RequestParam("orgId") Long orgId) {
@@ -71,7 +71,7 @@ public class ProjectController {
     }
 
     @PostMapping("/{id}/members/{userId}")
-    @PreAuthorize("@orgSecurity.isMember(#orgId)")
+    @PreAuthorize("@orgSecurity.isEditor(#orgId)")
     public ResponseEntity<ProjectResponseDto> addMember(
             @P("id") @PathVariable("id") Long id,
             @P("userId") @PathVariable("userId") Long userId,
@@ -81,7 +81,7 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}/members/{userId}")
-    @PreAuthorize("@orgSecurity.isMember(#orgId)")
+    @PreAuthorize("@orgSecurity.isEditor(#orgId)")
     public ResponseEntity<ProjectResponseDto> removeMember(
             @P("id") @PathVariable("id") Long id,
             @P("userId") @PathVariable("userId") Long userId,

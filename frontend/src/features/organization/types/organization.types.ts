@@ -9,6 +9,7 @@ export interface Organization {
   logoUrl?: string;
   createdAt: string;
   updatedAt: string;
+  myRole?: OrgRole | null;
 }
 
 export interface OrganizationMember {

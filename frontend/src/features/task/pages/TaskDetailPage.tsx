@@ -13,6 +13,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusTag, PriorityTag } from '@/components/ui/StatusTags';
 import { TaskStatus, TaskPriority } from '@/types/common';
 import { TaskFormModal } from '../components/TaskFormModal';
+import { useCan } from '@/hooks/useCan';
 
 const STATUS_OPTIONS = [
   { label: 'To Do', value: TaskStatus.TODO },
@@ -39,6 +40,7 @@ export default function TaskDetailPage() {
   const { data: projectsData = [] } = useProjects();
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const { data: orgMembers = [] } = useOrganizationMembers(activeOrganization?.id);
+  const { can } = useCan();
 
   const { data: task, isLoading } = useTask(taskId);
 
@@ -73,7 +75,7 @@ export default function TaskDetailPage() {
         }
         actions={
           <Space>
-            <Button onClick={() => setEditOpen(true)}>Edit</Button>
+            {can('tasks', 'update') && <Button onClick={() => setEditOpen(true)}>Edit</Button>}
             <Link to={ROUTES.tasks.base}>← Back to tasks</Link>
           </Space>
         }
@@ -89,6 +91,7 @@ export default function TaskDetailPage() {
               onChange={handleStatusChange}
               style={{ width: 150 }}
               loading={updateMutation.isPending}
+              disabled={!can('tasks', 'update')}
             />
           </Descriptions.Item>
           <Descriptions.Item label="Priority">
@@ -100,6 +103,7 @@ export default function TaskDetailPage() {
               allowClear
               placeholder="Not set"
               loading={updateMutation.isPending}
+              disabled={!can('tasks', 'update')}
             />
           </Descriptions.Item>
           <Descriptions.Item label="Project">
@@ -126,27 +130,31 @@ export default function TaskDetailPage() {
         </Descriptions>
       </Card>
 
-      <Typography.Text
-        type="danger"
-        style={{ cursor: 'pointer', marginTop: 16, display: 'inline-block' }}
-        onClick={() => setConfirmOpen(true)}
-      >
-        Delete this task
-      </Typography.Text>
+      {can('tasks', 'delete') && (
+        <>
+          <Typography.Text
+            type="danger"
+            style={{ cursor: 'pointer', marginTop: 16, display: 'inline-block' }}
+            onClick={() => setConfirmOpen(true)}
+          >
+            Delete this task
+          </Typography.Text>
+
+          <ConfirmDialog
+            open={confirmOpen}
+            title={`Delete task "${task.title}"?`}
+            content="This action cannot be undone."
+            okText="Delete task"
+            onConfirm={async () => {
+              await deleteMutation.mutateAsync(taskId);
+              navigate(ROUTES.tasks.base);
+            }}
+            onCancel={() => setConfirmOpen(false)}
+          />
+        </>
+      )}
 
       <TaskFormModal open={editOpen} onClose={() => setEditOpen(false)} task={task} />
-
-      <ConfirmDialog
-        open={confirmOpen}
-        title={`Delete task "${task.title}"?`}
-        content="This action cannot be undone."
-        okText="Delete task"
-        onConfirm={async () => {
-          await deleteMutation.mutateAsync(taskId);
-          navigate(ROUTES.tasks.base);
-        }}
-        onCancel={() => setConfirmOpen(false)}
-      />
     </div>
   );
 }
