@@ -1,5 +1,7 @@
 package com.projectmanagement.organization.dto.response;
 
+import com.projectmanagement.organization.entity.OrganizationRole;
+
 import java.time.Instant;
 
 public record OrganizationResponse(
@@ -9,5 +11,6 @@ public record OrganizationResponse(
         Long ownerId,
         String ownerName,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        OrganizationRole myRole
 ) {}

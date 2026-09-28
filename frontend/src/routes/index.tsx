@@ -7,6 +7,7 @@ import { AuthLayout, DashboardLayout } from '@/layouts';
 import { AuthGuard } from './guards/AuthGuard';
 import { GuestGuard } from './guards/GuestGuard';
 import { OrgGuard } from './guards/OrgGuard';
+import { RequireAdmin } from './guards/RequireAdmin';
 import { ROUTES } from './paths';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
@@ -105,16 +106,21 @@ const routes: RouteObject[] = [
                 element: withFallback(<OrgDetailPage />),
               },
               {
-                path: ROUTES.organizations.settings(':id'),
-                element: withFallback(<OrgSettingsPage />),
-              },
-              {
-                path: ROUTES.organizations.team(':id'),
-                element: withFallback(<OrgTeamPage />),
-              },
-              {
-                path: ROUTES.organizations.security(':id'),
-                element: withFallback(<AuditLogsPage />),
+                element: <RequireAdmin />,
+                children: [
+                  {
+                    path: ROUTES.organizations.settings(':id'),
+                    element: withFallback(<OrgSettingsPage />),
+                  },
+                  {
+                    path: ROUTES.organizations.team(':id'),
+                    element: withFallback(<OrgTeamPage />),
+                  },
+                  {
+                    path: ROUTES.organizations.security(':id'),
+                    element: withFallback(<AuditLogsPage />),
+                  },
+                ],
               },
             ],
           },

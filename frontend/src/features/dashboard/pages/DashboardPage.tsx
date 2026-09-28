@@ -38,6 +38,7 @@ import { useCreateTask } from '@/features/task/api/task.queries';
 import { AssignProjectMemberModal } from '@/features/project/components/AssignProjectMemberModal';
 import { useSwitchOrganization } from '@/features/organization/api/organization.queries';
 import { getApiErrorMessage } from '@/lib/axios';
+import { useCan } from '@/hooks/useCan';
 import type { Project } from '@/features/project/types/project.types';
 
 const { Title, Text } = Typography;
@@ -49,6 +50,7 @@ export default function DashboardPage() {
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const organizations = useOrgStore((state) => state.organizations);
   const switchOrg = useSwitchOrganization();
+  const { can } = useCan();
 
   const { projects, tasks, members, isLoading } = useDashboardStats();
 
@@ -496,23 +498,27 @@ export default function DashboardPage() {
               bodyStyle={{ padding: 16 }}
             >
               <Space direction="vertical" size={10} style={{ width: '100%' }}>
-                <Button
-                  type="primary"
-                  block
-                  icon={<PlusOutlined />}
-                  onClick={() => setIsProjectModalOpen(true)}
-                  style={{ fontWeight: 600, height: 38 }}
-                >
-                  + New Project
-                </Button>
-                <Button
-                  block
-                  icon={<CheckSquareOutlined />}
-                  onClick={() => setIsTaskModalOpen(true)}
-                  style={{ height: 38 }}
-                >
-                  + Create Task
-                </Button>
+                {can('projects', 'create') && (
+                  <Button
+                    type="primary"
+                    block
+                    icon={<PlusOutlined />}
+                    onClick={() => setIsProjectModalOpen(true)}
+                    style={{ fontWeight: 600, height: 38 }}
+                  >
+                    + New Project
+                  </Button>
+                )}
+                {can('tasks', 'create') && (
+                  <Button
+                    block
+                    icon={<CheckSquareOutlined />}
+                    onClick={() => setIsTaskModalOpen(true)}
+                    style={{ height: 38 }}
+                  >
+                    + Create Task
+                  </Button>
+                )}
               </Space>
             </Card>
 

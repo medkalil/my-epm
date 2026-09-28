@@ -13,7 +13,7 @@ interface KanbanLaneProps {
   color: string;
   tasks: Task[];
   projectNameOf: (projectId: number) => string | undefined;
-  onQuickCreate: (status: TaskStatus) => void;
+  onQuickCreate?: (status: TaskStatus) => void;
   onEdit?: (task: Task) => void;
   onDelete?: (task: Task) => void;
 }
@@ -46,12 +46,14 @@ export function KanbanLane({
         <Typography.Text strong>{label}</Typography.Text>
         <Typography.Text type="secondary"> ({tasks.length})</Typography.Text>
       </span>
-      <Button
-        type="text"
-        size="small"
-        icon={<PlusOutlined />}
-        onClick={() => onQuickCreate(status)}
-      />
+      {onQuickCreate && (
+        <Button
+          type="text"
+          size="small"
+          icon={<PlusOutlined />}
+          onClick={() => onQuickCreate(status)}
+        />
+      )}
     </div>
   );
 

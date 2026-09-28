@@ -77,7 +77,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         OrganizationMember ownerMember = new OrganizationMember(savedOrg, owner, OrganizationRole.OWNER, true);
         memberRepository.save(ownerMember);
 
-        return organizationMapper.toResponse(savedOrg);
+        return organizationMapper.toResponse(savedOrg, OrganizationRole.OWNER);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
         List<OrganizationMember> memberships = memberRepository.findByUser(user);
         return memberships.stream()
-                .map(m -> organizationMapper.toResponse(m.getOrganization()))
+                .map(m -> organizationMapper.toResponse(m.getOrganization(), m.getRole()))
                 .toList();
     }
 
@@ -141,7 +141,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         member.setActive(true);
         memberRepository.save(member);
 
-        return organizationMapper.toResponse(org);
+        return organizationMapper.toResponse(org, member.getRole());
     }
 
     @Override

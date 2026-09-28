@@ -15,6 +15,7 @@ import { TaskBoard } from '../components/TaskBoard';
 import { TaskTableView } from '../components/TaskTableView';
 import { TaskFilters } from '../components/TaskFilters';
 import { TaskFormModal } from '../components/TaskFormModal';
+import { useCan } from '@/hooks/useCan';
 
 const STATUS_TABS: Array<{ key: string; label: string; value?: TaskStatus }> = [
   { key: 'all', label: 'All Tasks' },
@@ -44,6 +45,7 @@ export default function TaskListPage() {
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const { data, isLoading } = useTasksByOrganization();
   const deleteMutation = useDeleteTask();
+  const { can } = useCan();
 
   const allTasks = useMemo(() => {
     const seen = new Set<number>();
@@ -105,9 +107,11 @@ export default function TaskListPage() {
         title="Tasks"
         subtitle={`${activeOrganization.name} · ${allTasks.length} total`}
         actions={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => openCreate()}>
-            New task
-          </Button>
+          can('tasks', 'create') && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => openCreate()}>
+              New task
+            </Button>
+          )
         }
       />
 
@@ -147,22 +151,23 @@ export default function TaskListPage() {
         filteredByCriteria.length === 0 ? (
           <EmptyState
             description="No tasks match your filters"
-            actionLabel="Create your first task"
-            onAction={() => openCreate()}
+            actionLabel={can('tasks', 'create') ? 'Create your first task' : undefined}
+            onAction={can('tasks', 'create') ? () => openCreate() : undefined}
           />
         ) : (
           <TaskBoard
             tasks={filteredByCriteria}
-            onQuickCreate={openCreate}
-            onEdit={openEdit}
-            onDelete={(t) => setDeleteTarget(t)}
+            onQuickCreate={can('tasks', 'create') ? openCreate : undefined}
+            onEdit={can('tasks', 'update') ? openEdit : undefined}
+            onDelete={can('tasks', 'delete') ? (t) => setDeleteTarget(t) : undefined}
+            canMove={can('tasks', 'update')}
           />
         )
       ) : (
         <TaskTableView
           tasks={tableTasks}
-          onEdit={openEdit}
-          onDelete={(t) => setDeleteTarget(t)}
+          onEdit={can('tasks', 'update') ? openEdit : undefined}
+          onDelete={can('tasks', 'delete') ? (t) => setDeleteTarget(t) : undefined}
         />
       )}
 

@@ -5,6 +5,7 @@ import type { Project } from '../types/project.types';
 import { useOrganizationMembers } from '@/features/organization/api/organization.queries';
 import { useAddMemberToProject, useRemoveMemberFromProject } from '../api/project.queries';
 import { useOrgStore } from '@/stores/orgStore';
+import { useCan } from '@/hooks/useCan';
 
 interface AssignProjectMemberModalProps {
   project: Project | null;
@@ -15,6 +16,8 @@ interface AssignProjectMemberModalProps {
 export function AssignProjectMemberModal({ project, open, onClose }: AssignProjectMemberModalProps) {
   const activeOrg = useOrgStore((state) => state.activeOrganization);
   const orgId = activeOrg?.id ?? 0;
+  const { can } = useCan();
+  const canManage = can('projects', 'update');
   const { data: orgMembers = [], isLoading } = useOrganizationMembers(activeOrg?.id);
 
   const addMemberMutation = useAddMemberToProject(orgId);
@@ -103,28 +106,36 @@ export function AssignProjectMemberModal({ project, open, onClose }: AssignProje
               <List.Item
                 key={item.id}
                 actions={[
-                  isMember ? (
-                    <Button
-                      key="remove"
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      loading={isPending}
-                      onClick={() => handleToggleMember(item.userId, true)}
-                    >
-                      Remove
-                    </Button>
+                  canManage ? (
+                    isMember ? (
+                      <Button
+                        key="remove"
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        loading={isPending}
+                        onClick={() => handleToggleMember(item.userId, true)}
+                      >
+                        Remove
+                      </Button>
+                    ) : (
+                      <Button
+                        key="add"
+                        type="default"
+                        size="small"
+                        icon={<UserAddOutlined />}
+                        loading={isPending}
+                        onClick={() => handleToggleMember(item.userId, false)}
+                      >
+                        Assign
+                      </Button>
+                    )
                   ) : (
-                    <Button
-                      key="add"
-                      type="default"
-                      size="small"
-                      icon={<UserAddOutlined />}
-                      loading={isPending}
-                      onClick={() => handleToggleMember(item.userId, false)}
-                    >
-                      Assign
-                    </Button>
+                    isMember && (
+                      <Tag key="member" color="blue">
+                        Assigned
+                      </Tag>
+                    )
                   ),
                 ]}
               >

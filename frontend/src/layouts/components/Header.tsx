@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useOrgStore } from '@/stores/orgStore';
 import { useSwitchOrganization } from '@/features/organization/api/organization.queries';
 import { ROUTES } from '@/routes/paths';
+import { useCan } from '@/hooks/useCan';
 
 const { Text } = Typography;
 
@@ -46,6 +47,7 @@ export function Header({
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const organizations = useOrgStore((state) => state.organizations);
   const switchOrg = useSwitchOrganization();
+  const { isAdmin } = useCan();
 
   const handleOrgChange = (orgId: number) => {
     switchOrg.mutate(orgId, {
@@ -139,9 +141,11 @@ export function Header({
         open={orgSwitchOpen}
         onCancel={onCloseOrgSwitch}
         footer={[
+          isAdmin && 
           <Button
             key="create"
             icon={<PlusOutlined />}
+            disabled={!isAdmin}
             onClick={() => {
               onCloseOrgSwitch();
               navigate(ROUTES.organizations.create);

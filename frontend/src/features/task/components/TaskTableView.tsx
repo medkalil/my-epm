@@ -1,4 +1,5 @@
 import { Table, Tag, Avatar, Dropdown, Typography, Space, Button, Row, Col } from 'antd';
+import type { MenuProps } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import { Link } from 'react-router-dom';
@@ -13,8 +14,8 @@ import type { TaskPriority } from '@/types/common';
 
 interface TaskTableViewProps {
   tasks: Task[];
-  onEdit: (task: Task) => void;
-  onDelete: (task: Task) => void;
+  onEdit?: (task: Task) => void;
+  onDelete?: (task: Task) => void;
 }
 
 export function TaskTableView({ tasks, onEdit, onDelete }: TaskTableViewProps) {
@@ -87,19 +88,18 @@ export function TaskTableView({ tasks, onEdit, onDelete }: TaskTableViewProps) {
       title: '',
       key: 'actions',
       width: 48,
-      render: (_, task) => (
-        <Dropdown
-          menu={{
-            items: [
-              { key: 'edit', label: 'Edit task', onClick: () => onEdit(task) },
-              { key: 'delete', label: 'Delete task', danger: true, onClick: () => onDelete(task) },
-            ],
-          }}
-          trigger={['click']}
-        >
-          <Button type="text" size="small" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
+      render: (_, task) => {
+        const menuItems: MenuProps['items'] = [];
+        if (onEdit) menuItems.push({ key: 'edit', label: 'Edit task', onClick: () => onEdit(task) });
+        if (onDelete) menuItems.push({ key: 'delete', label: 'Delete task', danger: true, onClick: () => onDelete(task) });
+
+        if (menuItems.length === 0) return null;
+        return (
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <Button type="text" size="small" icon={<MoreOutlined />} />
+          </Dropdown>
+        );
+      },
     },
   ];
 

@@ -18,6 +18,7 @@ import com.projectmanagement.organization.dto.response.OrganizationResponse;
 import com.projectmanagement.organization.entity.JoinRequestStatus;
 import com.projectmanagement.organization.entity.Organization;
 import com.projectmanagement.organization.entity.OrganizationJoinRequest;
+import com.projectmanagement.organization.entity.OrganizationRole;
 import com.projectmanagement.organization.service.JoinRequestService;
 import com.projectmanagement.organization.service.OrganizationService;
 import com.projectmanagement.user.dto.response.UserResponse;
@@ -198,7 +199,7 @@ class AuthControllerTest {
         refreshToken.setToken("mock-refresh-token");
         refreshToken.setUser(userDetails);
 
-        OrganizationResponse orgResponse = new OrganizationResponse(10L, "Acme", "acme", 1L, "alice", Instant.now(), Instant.now());
+        OrganizationResponse orgResponse = new OrganizationResponse(10L, "Acme", "acme", 1L, "alice", Instant.now(), Instant.now(), OrganizationRole.OWNER);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
         when(jwtUtils.generateJwtToken(auth)).thenReturn("mock-jwt-token");
@@ -389,7 +390,7 @@ class AuthControllerTest {
         userDetails.setMustChangePassword(true);
         Authentication auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-        OrganizationResponse orgResponse = new OrganizationResponse(10L, "Acme", "acme", 1L, "alice", Instant.now(), Instant.now());
+        OrganizationResponse orgResponse = new OrganizationResponse(10L, "Acme", "acme", 1L, "alice", Instant.now(), Instant.now(), OrganizationRole.OWNER);
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
         when(joinRequestService.findBlockingRequest("alice")).thenReturn(Optional.empty());

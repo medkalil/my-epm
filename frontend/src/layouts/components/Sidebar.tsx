@@ -16,6 +16,7 @@ import { ROUTES } from '@/routes/paths';
 import { useOrgStore } from '@/stores/orgStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useLogoutMutation } from '@/features/auth/api/auth.queries';
+import { useCan } from '@/hooks/useCan';
 
 const { Text } = Typography;
 
@@ -30,12 +31,45 @@ export function Sidebar({ collapsed, onOpenOrgSwitch }: SidebarProps) {
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const user = useAuthStore((state) => state.user);
   const logoutMutation = useLogoutMutation();
+  const { isAdmin } = useCan();
 
   const orgId = activeOrganization?.id;
 
   const handleLogout = () => {
     logoutMutation.mutate();
   };
+
+  const teamMenuItem = {
+    key: orgId ? ROUTES.organizations.team(orgId) : '/team',
+    icon: <TeamOutlined />,
+    label: (
+      <Link to={orgId ? ROUTES.organizations.team(orgId) : ROUTES.dashboard} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>Team &amp; Access</span>
+        {!collapsed && <Tag color="geekblue" style={{ fontSize: 9, borderRadius: 4, padding: '0 4px', margin: 0 }}>RBAC</Tag>}
+      </Link>
+    ),
+  };
+
+  const adminMenuItems: Required<MenuProps>['items'] = isAdmin
+    ? [
+        {
+          type: 'group',
+          label: collapsed ? null : <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.8, color: '#64748b' }}>ADMINISTRATION</span>,
+          children: [
+            {
+              key: orgId ? ROUTES.organizations.settings(orgId) : '/settings',
+              icon: <SettingOutlined />,
+              label: <Link to={orgId ? ROUTES.organizations.settings(orgId) : ROUTES.dashboard}>Org Settings</Link>,
+            },
+            {
+              key: orgId ? ROUTES.organizations.security(orgId) : '/security',
+              icon: <SafetyCertificateOutlined />,
+              label: <Link to={orgId ? ROUTES.organizations.security(orgId) : ROUTES.dashboard}>API &amp; Audit Logs</Link>,
+            },
+          ],
+        },
+      ]
+    : [];
 
   const menuItems: Required<MenuProps>['items'] = [
     {
@@ -62,34 +96,10 @@ export function Sidebar({ collapsed, onOpenOrgSwitch }: SidebarProps) {
           icon: <CheckSquareOutlined />,
           label: <Link to={ROUTES.tasks.base}>Tasks &amp; Boards</Link>,
         },
-        {
-          key: orgId ? ROUTES.organizations.team(orgId) : '/team',
-          icon: <TeamOutlined />,
-          label: (
-            <Link to={orgId ? ROUTES.organizations.team(orgId) : ROUTES.dashboard} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Team &amp; Access</span>
-              {!collapsed && <Tag color="geekblue" style={{ fontSize: 9, borderRadius: 4, padding: '0 4px', margin: 0 }}>RBAC</Tag>}
-            </Link>
-          ),
-        },
+        ...(isAdmin ? [teamMenuItem] : []),
       ],
     },
-    {
-      type: 'group',
-      label: collapsed ? null : <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.8, color: '#64748b' }}>ADMINISTRATION</span>,
-      children: [
-        {
-          key: orgId ? ROUTES.organizations.settings(orgId) : '/settings',
-          icon: <SettingOutlined />,
-          label: <Link to={orgId ? ROUTES.organizations.settings(orgId) : ROUTES.dashboard}>Org Settings</Link>,
-        },
-        {
-          key: orgId ? ROUTES.organizations.security(orgId) : '/security',
-          icon: <SafetyCertificateOutlined />,
-          label: <Link to={orgId ? ROUTES.organizations.security(orgId) : ROUTES.dashboard}>API &amp; Audit Logs</Link>,
-        },
-      ],
-    },
+    ...adminMenuItems,
   ];
 
   return (

@@ -10,6 +10,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useDeleteProject } from '../api/project.queries';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCan } from '@/hooks/useCan';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteMutation = useDeleteProject(orgId!);
+  const { can } = useCan();
 
   const { data: project, isLoading } = useProject(projectId, orgId);
 
@@ -52,25 +54,29 @@ export default function ProjectDetailPage() {
         </Descriptions>
       </Card>
 
-      <Typography.Text
-        type="danger"
-        style={{ cursor: 'pointer', marginTop: 16, display: 'inline-block' }}
-        onClick={() => setConfirmOpen(true)}
-      >
-        Delete this project
-      </Typography.Text>
+      {can('projects', 'delete') && (
+        <>
+          <Typography.Text
+            type="danger"
+            style={{ cursor: 'pointer', marginTop: 16, display: 'inline-block' }}
+            onClick={() => setConfirmOpen(true)}
+          >
+            Delete this project
+          </Typography.Text>
 
-      <ConfirmDialog
-        open={confirmOpen}
-        title={`Delete project "${project.name}"?`}
-        content="This will permanently delete the project and all associated tasks."
-        okText="Delete project"
-        onConfirm={async () => {
-          await deleteMutation.mutateAsync(projectId);
-          navigate(ROUTES.projects.base);
-        }}
-        onCancel={() => setConfirmOpen(false)}
-      />
+          <ConfirmDialog
+            open={confirmOpen}
+            title={`Delete project "${project.name}"?`}
+            content="This will permanently delete the project and all associated tasks."
+            okText="Delete project"
+            onConfirm={async () => {
+              await deleteMutation.mutateAsync(projectId);
+              navigate(ROUTES.projects.base);
+            }}
+            onCancel={() => setConfirmOpen(false)}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -48,6 +48,7 @@ import { projectProgressPercent } from '../utils/projectProgress';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useOrgStore } from '@/stores/orgStore';
+import { useCan } from '@/hooks/useCan';
 import type { Project, ProjectStatus } from '../types/project.types';
 
 export default function ProjectListPage() {
@@ -62,6 +63,7 @@ export default function ProjectListPage() {
 
   const activeOrganization = useOrgStore((state) => state.activeOrganization);
   const orgId = activeOrganization?.id ?? 0;
+  const { can } = useCan();
 
   const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
   const { data: orgMembers = [] } = useOrganizationMembers(activeOrganization?.id);
@@ -381,50 +383,58 @@ export default function ProjectListPage() {
         const currentSt = record.status || 'IN_PROGRESS';
 
         const actionMenuItems: MenuProps['items'] = [
-          {
-            key: 'manage-members',
-            label: 'Manage Contributors',
-            icon: <UsergroupAddOutlined />,
-            onClick: () => setSelectedProjectIdForMembers(record.id),
-          },
-          {
-            type: 'divider',
-          },
-          {
-            key: 'status-group',
-            label: 'Set Status',
-            type: 'group',
-            children: [
-              {
-                key: 'set-in-progress',
-                label: 'In Progress',
-                disabled: currentSt === 'IN_PROGRESS',
-                onClick: () => handleUpdateStatus(record, 'IN_PROGRESS'),
-              },
-              {
-                key: 'set-in-review',
-                label: 'In Review',
-                disabled: currentSt === 'IN_REVIEW',
-                onClick: () => handleUpdateStatus(record, 'IN_REVIEW'),
-              },
-              {
-                key: 'set-completed',
-                label: 'Completed',
-                disabled: currentSt === 'COMPLETED',
-                onClick: () => handleUpdateStatus(record, 'COMPLETED'),
-              },
-            ],
-          },
-          {
-            type: 'divider',
-          },
-          {
-            key: 'delete',
-            danger: true,
-            label: 'Delete Project',
-            icon: <DeleteOutlined />,
-            onClick: () => handleDeleteProject(record),
-          },
+          ...(can('projects', 'update')
+            ? [
+                {
+                  key: 'manage-members',
+                  label: 'Manage Contributors',
+                  icon: <UsergroupAddOutlined />,
+                  onClick: () => setSelectedProjectIdForMembers(record.id),
+                },
+                {
+                  type: 'divider',
+                },
+                {
+                  key: 'status-group',
+                  label: 'Set Status',
+                  type: 'group',
+                  children: [
+                    {
+                      key: 'set-in-progress',
+                      label: 'In Progress',
+                      disabled: currentSt === 'IN_PROGRESS',
+                      onClick: () => handleUpdateStatus(record, 'IN_PROGRESS'),
+                    },
+                    {
+                      key: 'set-in-review',
+                      label: 'In Review',
+                      disabled: currentSt === 'IN_REVIEW',
+                      onClick: () => handleUpdateStatus(record, 'IN_REVIEW'),
+                    },
+                    {
+                      key: 'set-completed',
+                      label: 'Completed',
+                      disabled: currentSt === 'COMPLETED',
+                      onClick: () => handleUpdateStatus(record, 'COMPLETED'),
+                    },
+                  ],
+                },
+                {
+                  type: 'divider',
+                },
+              ]
+            : []),
+          ...(can('projects', 'delete')
+            ? [
+                {
+                  key: 'delete',
+                  danger: true,
+                  label: 'Delete Project',
+                  icon: <DeleteOutlined />,
+                  onClick: () => handleDeleteProject(record),
+                },
+              ]
+            : []),
         ];
 
         return (
@@ -447,14 +457,16 @@ export default function ProjectListPage() {
         actions={
           <Space size={12}>
             <Button icon={<DownloadOutlined />}>Portfolio Reports</Button>  {/* TODO: Portfolio Reports */}
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateModalOpen(true)}
-              style={{ fontWeight: 500 }}
-            >
-              Create Project
-            </Button>
+            {can('projects', 'create') && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateModalOpen(true)}
+                style={{ fontWeight: 500 }}
+              >
+                Create Project
+              </Button>
+            )}
           </Space>
         }
       />
@@ -724,9 +736,13 @@ export default function ProjectListPage() {
                 ? 'No projects in this organization yet'
                 : 'No projects match your active search and filter criteria'
             }
-            actionLabel={projects.length === 0 ? 'Create First Project' : 'Clear Filters'}
+            actionLabel={
+              projects.length === 0 && can('projects', 'create')
+                ? 'Create First Project'
+                : 'Clear Filters'
+            }
             onAction={() => {
-              if (projects.length === 0) {
+              if (projects.length === 0 && can('projects', 'create')) {
                 setCreateModalOpen(true);
               } else {
                 setActiveStatusTab('ALL');
@@ -766,9 +782,9 @@ export default function ProjectListPage() {
                 project={project}
                 orgMembers={orgMembers}
                 progressPercent={progressByProjectId.get(project.id) ?? 0}
-                onManageMembers={(p) => setSelectedProjectIdForMembers(p.id)}
-                onUpdateStatus={handleUpdateStatus}
-                onDelete={handleDeleteProject}
+                onManageMembers={can('projects', 'update') ? (p) => setSelectedProjectIdForMembers(p.id) : undefined}
+                onUpdateStatus={can('projects', 'update') ? handleUpdateStatus : undefined}
+                onDelete={can('projects', 'delete') ? handleDeleteProject : undefined}
               />
             </Col>
           ))}

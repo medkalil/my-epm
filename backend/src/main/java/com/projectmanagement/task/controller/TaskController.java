@@ -25,7 +25,7 @@ public class TaskController {
     }
 
     @PostMapping
-    @PreAuthorize("@orgSecurity.isMember(#request.organizationId)")
+    @PreAuthorize("@orgSecurity.isEditor(#request.organizationId)")
     public ResponseEntity<TaskResponseDto> createTask(
         @P("request") @Valid @RequestBody TaskCreateDto request) {
         TaskResponseDto response = taskService.createTask(request);
@@ -68,7 +68,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@orgSecurity.isMember(#orgId)")
+    @PreAuthorize("@orgSecurity.isEditor(#orgId)")
     public ResponseEntity<TaskResponseDto> updateTask(
             @P("id") @PathVariable("id") Long id,
             @P("orgId") @RequestParam("orgId") Long orgId,
@@ -78,7 +78,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}/move")
-    @PreAuthorize("@orgSecurity.isMember(#orgId)")
+    @PreAuthorize("@orgSecurity.isEditor(#orgId)")
     public ResponseEntity<TaskResponseDto> moveTask(
             @P("id") @PathVariable("id") Long id,
             @P("orgId") @RequestParam("orgId") Long orgId,
@@ -88,7 +88,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("@orgSecurity.isMember(#orgId)")
+    @PreAuthorize("@orgSecurity.hasRole(#orgId, 'OWNER', 'ADMIN')")
     public ResponseEntity<Void> deleteTask(
             @P("id") @PathVariable("id") Long id,
             @P("orgId") @RequestParam("orgId") Long orgId) {

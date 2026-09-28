@@ -27,9 +27,9 @@ export function useMyOrganizations() {
   useEffect(() => {
     if (query.data) {
       setOrganizations(query.data);
-      if (!activeOrganization && query.data.length > 0) {
-        setActiveOrganization(query.data[0] ?? null);
-      }
+      const freshActive =
+        query.data.find((o) => o.id === activeOrganization?.id) ?? query.data[0] ?? null;
+      setActiveOrganization(freshActive);
     }
   }, [query.data, setOrganizations, setActiveOrganization, activeOrganization]);
 

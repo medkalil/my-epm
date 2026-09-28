@@ -26,6 +26,10 @@ public class OrgSecurity {
         return memberRepository.existsByOrganization_IdAndUser_Name(orgId, auth.getName());
     }
 
+    public boolean isEditor(Long orgId) {
+        return hasRole(orgId, "OWNER", "ADMIN", "MEMBER");
+    }
+
     public boolean hasRole(Long orgId, String... roles) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || orgId == null) {
