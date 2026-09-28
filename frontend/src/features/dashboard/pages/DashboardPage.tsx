@@ -618,42 +618,7 @@ export default function DashboardPage() {
                     OWNER
                   </Tag>
                 </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Space size={8}>
-                    <Avatar size="small" style={{ background: '#52c41a' }}>
-                      ST
-                    </Avatar>
-                    <div>
-                      <Text strong style={{ fontSize: 12, display: 'block' }}>
-                        Sarah T.
-                      </Text>
-                      <Text type="secondary" style={{ fontSize: 10 }}>
-                        sarah.t@acmefin.corp
-                      </Text>
-                    </div>
-                  </Space>
-                  <Tag color="geekblue" style={{ fontSize: 10 }}>
-                    ADMIN
-                  </Tag>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Space size={8}>
-                    <Avatar size="small" style={{ background: '#722ed1' }}>
-                      ER
-                    </Avatar>
-                    <div>
-                      <Text strong style={{ fontSize: 12, display: 'block' }}>
-                        Elena R.
-                      </Text>
-                      <Text type="secondary" style={{ fontSize: 10 }}>
-                        elena.r@acmefin.corp
-                      </Text>
-                    </div>
-                  </Space>
-                  <Tag style={{ fontSize: 10 }}>MEMBER</Tag>
-                </div>
+                
               </Space>
             </Card>
           </Space>
