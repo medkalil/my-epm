@@ -26,9 +26,10 @@ export function useLoginMutation() {
         email: data.email,
       });
 
+      const orgs = data.organizations ?? [];
+      setOrganizations(orgs);
+
       if (data.mustChangePassword) {
-        const orgs = data.organizations ?? [];
-        setOrganizations(orgs);
         if (orgs.length > 0) {
           const active =
             orgs.find((o) => o.id === data.currentOrganizationId) || orgs[0];
@@ -40,8 +41,6 @@ export function useLoginMutation() {
         return;
       }
 
-      const orgs = data.organizations ?? [];
-      setOrganizations(orgs);
 
       if (orgs.length > 0) {
         const active =
