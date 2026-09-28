@@ -11,7 +11,11 @@ import { getApiErrorMessage } from '@/lib/axios';
 
 const { Title, Text } = Typography;
 
-export function ChangePasswordForm() {
+interface ChangePasswordFormProps {
+  userId: number;
+}
+
+export function ChangePasswordForm({ userId }: ChangePasswordFormProps) {
   const { message } = App.useApp();
   const changePasswordMutation = useChangePasswordMutation();
 
@@ -22,7 +26,7 @@ export function ChangePasswordForm() {
     formState: { errors },
   } = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
-    defaultValues: { newPassword: '', confirmPassword: '' },
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
   });
 
   const password = watch('newPassword') || '';
@@ -35,7 +39,11 @@ export function ChangePasswordForm() {
 
   const onSubmit = async (values: ChangePasswordFormValues) => {
     try {
-      await changePasswordMutation.mutateAsync(values.newPassword);
+      await changePasswordMutation.mutateAsync({
+        userId,
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
     } catch (error) {
       message.error(getApiErrorMessage(error));
     }
@@ -66,6 +74,31 @@ export function ChangePasswordForm() {
       </div>
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        <Form.Item
+          label={
+            <span style={{ fontWeight: 600, fontSize: 13 }}>
+              Current Password <span style={{ color: '#ef4444' }}>*</span>
+            </span>
+          }
+          validateStatus={errors.currentPassword ? 'error' : ''}
+          help={errors.currentPassword?.message}
+          style={{ marginBottom: 16 }}
+        >
+          <Controller
+            control={control}
+            name="currentPassword"
+            render={({ field }) => (
+              <Input.Password
+                prefix={<LockOutlined style={{ color: '#94a3b8' }} />}
+                placeholder="Temporary password"
+                size="large"
+                autoComplete="current-password"
+                {...field}
+              />
+            )}
+          />
+        </Form.Item>
+
         <Form.Item
           label={
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
@@ -179,8 +212,7 @@ export function ChangePasswordForm() {
       >
         <CheckCircleFilled style={{ color: '#16a34a', marginTop: 2 }} />
         <Text type="secondary" style={{ fontSize: 12 }}>
-          After saving, you will be signed in with your new password and taken to
-          your dashboard.
+          After saving, sign in with your new password to continue.
         </Text>
       </div>
     </Card>

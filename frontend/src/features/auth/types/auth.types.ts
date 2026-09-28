@@ -29,9 +29,9 @@ export interface RefreshTokenResponse {
 }
 
 export interface LoginResponse {
-  token: string;
+  token: string | null;
   type?: string;
-  refreshToken: string;
+  refreshToken: string | null;
   id: number;
   username: string;
   email?: string;
@@ -39,6 +39,12 @@ export interface LoginResponse {
   mustChangePassword?: boolean;
   currentOrganizationId?: number | null;
   organizations?: Organization[];
+}
+
+export interface ChangePasswordRequest {
+  userId: number;
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface RegisterResponse {

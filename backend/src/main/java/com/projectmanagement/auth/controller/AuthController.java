@@ -77,7 +77,6 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(loginRequest.identifier(), loginRequest.password()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
 
         User userDetails = (User) authentication.getPrincipal();
 
@@ -85,10 +84,23 @@ public class AuthController {
             throw new JoinRequestPendingException(request.getOrganization().getName(), request.getStatus());
         });
 
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
-
         List<OrganizationResponse> userOrgs = organizationService.getUserOrganizations(userDetails.getUsername());
         Long currentOrgId = organizationService.getActiveOrganizationId(userDetails.getUsername());
+
+        if (userDetails.isMustChangePassword()) {
+            return ResponseEntity.ok(new JwtResponse(null,
+                    null,
+                    userDetails.getId(),
+                    userDetails.getUsername(),
+                    userDetails.getEmail(),
+                    userDetails.getFullName(),
+                    true,
+                    currentOrgId,
+                    userOrgs));
+        }
+
+        String jwt = jwtUtils.generateJwtToken(authentication);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 
         return ResponseEntity.ok(new JwtResponse(jwt,
                 refreshToken.getToken(),
@@ -96,7 +108,7 @@ public class AuthController {
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 userDetails.getFullName(),
-                userDetails.isMustChangePassword(),
+                false,
                 currentOrgId,
                 userOrgs));
     }
@@ -175,10 +187,17 @@ public class AuthController {
 
     @PostMapping("/change-password")
     @Transactional
-    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest,
-                                            Authentication authentication) {
-        User user = userRepository.findByName(authentication.getName())
-                .orElseThrow(() -> new UserNotFoundException("User not found with username: " + authentication.getName()));
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest) {
+        User user = userRepository.findById(changePasswordRequest.userId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + changePasswordRequest.userId()));
+
+        if (!encoder.matches(changePasswordRequest.currentPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest().body("Current password is incorrect.");
+        }
+
+        if (encoder.matches(changePasswordRequest.newPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest().body("New password must be different from the current password.");
+        }
 
         user.setPassword(encoder.encode(changePasswordRequest.newPassword()));
         user.setMustChangePassword(false);

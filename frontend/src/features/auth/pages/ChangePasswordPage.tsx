@@ -1,12 +1,20 @@
 import { Typography } from 'antd';
 import { ApartmentOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { ChangePasswordForm } from '../components/ChangePasswordForm';
 import { ROUTES } from '@/routes/paths';
 
 const { Text } = Typography;
 
 export default function ChangePasswordPage() {
+  const location = useLocation();
+  const state = location.state as { userId?: number } | null;
+  const userId = state?.userId;
+
+  if (typeof userId !== 'number') {
+    return <Navigate to={ROUTES.login} replace />;
+  }
+
   return (
     <div
       style={{
@@ -48,7 +56,7 @@ export default function ChangePasswordPage() {
             </Text>
           </Link>
         </div>
-        <ChangePasswordForm />
+        <ChangePasswordForm userId={userId} />
       </div>
     </div>
   );
